@@ -1,4 +1,6 @@
 import sympy as sp
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class Point:
     def __init__(self, x=0, y=0, z=0):
@@ -121,9 +123,39 @@ def Robot_plot(joint_pos):
     p3 = joint_pos.P3
     pE = joint_pos.PE
 
+    x_coords = [p1.x, p2.x, p3.x, pE.x]
+    y_coords = [p1.y, p2.y, p3.y, pE.y]
+    z_coords = [p1.z, p2.z, p3.z, pE.z]
 
+    # Extract coordinates for plotting
+    x_max = max(abs(coord) for coord in x_coords if isinstance(coord, (int, float)))
+    y_max = max(abs(coord) for coord in y_coords if isinstance(coord, (int, float)))
+    z_max = max(abs(coord) for coord in z_coords if isinstance(coord, (int, float)))
+    
+    max_range = float(max(x_max, y_max, z_max))  # ให้ max_range เป็น float
 
+    # Create a 3D plot
+    fig = plt.figure(figsize=(7, 7))  # ขยายขนาดของกราฟ
+    ax = fig.add_subplot(111, projection='3d')
 
+    ax.scatter(p1.x, p1.y, p1.z, color='red', s=100, label='P1')
+    ax.scatter(p2.x, p2.y, p2.z, color='blue', s=100, label='P2')
+    ax.scatter(p3.x, p3.y, p3.z, color='green', s=100, label='P3')
+    ax.scatter(pE.x, pE.y, pE.z, color='orange', s=100, label='End Effector')
+
+    # Plot the line connecting the points
+    ax.plot(x_coords, y_coords, z_coords, color='green', label='Robot Arm')
+
+    ax.set_xlabel('X-axis')
+    ax.set_ylabel('Y-axis')
+    ax.set_zlabel('Z-axis')
+    ax.legend(loc='upper left')
+
+    ax.set_xlim([-max_range, max_range])  # X-axis centered
+    ax.set_ylim([-max_range, max_range])  # Y-axis centered
+    ax.set_zlim([0, max_range])           # Z-axis starts at 0 and goes positive
+
+    plt.show(block=True)
 
 RRR = RRR_Robot(l1=2, l2=1, l3=0.4, q1=0.2, q2=1.3, q3=0.8)
 
@@ -149,5 +181,5 @@ print("Pz ", goal_point.PE.z)
 # print("Py ", position.PE.y)
 # print("Pz ", position.PE.z)
 
-# PLot check
+# Plot check
 Robot_plot(goal_point)
