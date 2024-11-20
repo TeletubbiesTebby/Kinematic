@@ -112,7 +112,7 @@ class RRR_Robot:
 
         joint_pos_plot = Joint_Pos_Plot(P1, P2, P3, PE)
 
-        return  joint_pos_plot # (P1, P2, P3, PE)
+        return  joint_pos_plot # (P1, P2, P3, PE) #นิ้งจีงต้องใช้
 
 
 def Robot_plot(joint_pos):
@@ -134,20 +134,20 @@ print("Px ", goal_point.PE.x)
 print("Py ", goal_point.PE.y)
 print("Pz ", goal_point.PE.z)
 
-# check Inverse_Kinematic
-# goal_joint_space = RRR.Inverse_Kinematics(goal_point.PE)
-# print("goal joint space")
-# print("q1_sol ", goal_joint_space.q1)
-# print("q2_sol ", goal_joint_space.q2)
-# print("q3_sol ", goal_joint_space.q3)
+#check Inverse_Kinematic
+goal_joint_space = RRR.Inverse_Kinematics(goal_point.PE)
+print("goal joint space")
+print("q1_sol ", goal_joint_space.q1)
+print("q2_sol ", goal_joint_space.q2)
+print("q3_sol ", goal_joint_space.q3)
 
-# RRR.update_joint(goal_joint_space)
+RRR.update_joint(goal_joint_space)
 
-# position = RRR.Forward_Kinematics()
-# print("goal point")
-# print("Px ", position.PE.x)
-# print("Py ", position.PE.y)
-# print("Pz ", position.PE.z)
+position = RRR.Forward_Kinematics()
+print("goal point")
+print("Px ", position.PE.x)
+print("Py ", position.PE.y)
+print("Pz ", position.PE.z)
 
 # PLot check
 Robot_plot(goal_point)
