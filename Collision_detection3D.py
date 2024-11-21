@@ -28,10 +28,33 @@ def main():
         theta2 = 2 * pi * node[1] / M - pi
         theta3 = 2 * pi * node[2] / M - pi
         arm.update_joints([theta1, theta2, theta3])
+
+        # ตรวจสอบการชนและแสดงสถานะพร้อมระยะห่าง
+        collision_detected = False
+        print("\nChecking for collisions...")
+        for point_index, point in enumerate(arm.points):
+            for obstacle_index, obstacle in enumerate(obstacles):
+                obstacle_center = np.array(obstacle[:3])
+                radius = obstacle[3]
+                distance = np.linalg.norm(np.array(point) - obstacle_center)
+                if distance <= radius:  # มีการชน
+                    collision_detected = True
+                    print(f"Collision detected at joint {point_index + 1} with obstacle {obstacle_index + 1}:")
+                    print(f"  Joint Position: {point}, Obstacle Center: {obstacle_center}, Radius: {radius:.2f}, Distance: {distance:.2f}")
+                else:
+                    print(f"No collision at joint {point_index + 1} with obstacle {obstacle_index + 1}:")
+                    print(f"  Joint Position: {point}, Obstacle Center: {obstacle_center}, Radius: {radius:.2f}, Distance: {distance:.2f}")
+
+        if not collision_detected:
+            print("All joints are safe.")
+
+        # แสดงกราฟของแขนกล
         arm.plot(obstacles=obstacles)
 
+
+
 # ฟังก์ชันสุ่มสร้างสิ่งกีดขวาง
-def generate_random_obstacles(num_obstacles=3, max_radius=1, space_limit=3, min_distance=0.1):
+def generate_random_obstacles(num_obstacles=3, max_radius=0.8, space_limit=3, min_distance=0.1):
     """
     สร้างสิ่งกีดขวางแบบสุ่มในพื้นที่ 3D โดยไม่มีการทับซ้อน
     :param num_obstacles: จำนวนสิ่งกีดขวางที่ต้องการ
@@ -64,10 +87,14 @@ def generate_random_obstacles(num_obstacles=3, max_radius=1, space_limit=3, min_
 
     return obstacles
 
-
-def detect_collision(obstacles, joint_position):
+def detect_collision(obstacles, joint_position, buffer=0.2):
     """
     ตรวจสอบว่าตำแหน่งของข้อต่อ (joint_position) อยู่ใกล้กับสิ่งกีดขวาง (obstacles) หรือไม่
+    โดยเพิ่มระยะเผื่อเฉียด (buffer)
+    :param obstacles: รายการสิ่งกีดขวางในรูปแบบ [[x, y, z, r], ...]
+    :param joint_position: ตำแหน่งของข้อต่อในรูปแบบ [x, y, z]
+    :param buffer: ระยะเผื่อเฉียดที่เพิ่มจากรัศมีของสิ่งกีดขวาง
+    :return: 1 ถ้ามีการชนหรืออยู่ในระยะเฉียด, 0 มิฉะนั้น
     """
     for obstacle in obstacles:
         obstacle_center = np.array(obstacle[:3])  # จุดศูนย์กลางของสิ่งกีดขวาง
@@ -77,10 +104,11 @@ def detect_collision(obstacles, joint_position):
         # คำนวณระยะทางระหว่างข้อต่อและจุดศูนย์กลางของสิ่งกีดขวาง
         distance = np.linalg.norm(joint_vec - obstacle_center)
 
-        # ตรวจสอบว่าระยะทางน้อยกว่าหรือเท่ากับรัศมีหรือไม่
-        if distance <= radius:
-            return 1  # มีการชนหรือใกล้สิ่งกีดขวาง
-    return 0  # ไม่มีการชน
+        # ตรวจสอบว่าระยะทางน้อยกว่าหรือเท่ากับ (รัศมี + buffer) หรือไม่
+        if distance <= radius + buffer:
+            return 1  # มีการชนหรืออยู่ในระยะเฉียด
+    return 0  # ไม่มีการชนหรือเฉียด
+
 
 def get_occupancy_grid(arm, obstacles):
     grid = np.zeros((M, M, M), dtype=int)  # สร้าง Grid 3 มิติ
