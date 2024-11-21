@@ -114,7 +114,7 @@ class RRR_Robot:
 
         joint_pos_plot = Joint_Pos_Plot(P1, P2, P3, PE)
 
-        return  joint_pos_plot # (P1, P2, P3, PE) #นิ้งจีงต้องใช้
+        return  joint_pos_plot # (P1, P2, P3, PE)
 
 
 def Robot_plot(joint_pos):
@@ -123,41 +123,7 @@ def Robot_plot(joint_pos):
     p3 = joint_pos.P3
     pE = joint_pos.PE
 
-    x_coords = [p1.x, p2.x, p3.x, pE.x]
-    y_coords = [p1.y, p2.y, p3.y, pE.y]
-    z_coords = [p1.z, p2.z, p3.z, pE.z]
-
-    # Extract coordinates for plotting
-    x_max = max(abs(coord) for coord in x_coords if isinstance(coord, (int, float)))
-    y_max = max(abs(coord) for coord in y_coords if isinstance(coord, (int, float)))
-    z_max = max(abs(coord) for coord in z_coords if isinstance(coord, (int, float)))
-    
-    max_range = float(max(x_max, y_max, z_max))  # ให้ max_range เป็น float
-
-    # Create a 3D plot
-    fig = plt.figure(figsize=(7, 7))  # ขยายขนาดของกราฟ
-    ax = fig.add_subplot(111, projection='3d')
-
-    ax.scatter(p1.x, p1.y, p1.z, color='red', s=100, label='P1')
-    ax.scatter(p2.x, p2.y, p2.z, color='blue', s=100, label='P2')
-    ax.scatter(p3.x, p3.y, p3.z, color='green', s=100, label='P3')
-    ax.scatter(pE.x, pE.y, pE.z, color='orange', s=100, label='End Effector')
-
-    # Plot the line connecting the points
-    ax.plot(x_coords, y_coords, z_coords, color='green', label='Robot Arm')
-
-    ax.set_xlabel('X-axis')
-    ax.set_ylabel('Y-axis')
-    ax.set_zlabel('Z-axis')
-    ax.legend(loc='upper left')
-
-    ax.set_xlim([-max_range, max_range])  # X-axis centered
-    ax.set_ylim([-max_range, max_range])  # Y-axis centered
-    ax.set_zlim([0, max_range])           # Z-axis starts at 0 and goes positive
-
-    plt.show(block=True)
-
-RRR = RRR_Robot(l1=2, l2=1, l3=0.4, q1=0.2, q2=1.3, q3=0.8)
+RRR = RRR_Robot(l1=3, l2=1, l3=0.4, q1=0.2, q2=1.3, q3=0.8)
 
 # check Forward_Kinematics 
 goal_point = RRR.Forward_Kinematics()
@@ -166,20 +132,66 @@ print("Px ", goal_point.PE.x)
 print("Py ", goal_point.PE.y)
 print("Pz ", goal_point.PE.z)
 
-#check Inverse_Kinematic
-goal_joint_space = RRR.Inverse_Kinematics(goal_point.PE)
-print("goal joint space")
-print("q1_sol ", goal_joint_space.q1)
-print("q2_sol ", goal_joint_space.q2)
-print("q3_sol ", goal_joint_space.q3)
+# check Inverse_Kinematic
+# goal_joint_space = RRR.Inverse_Kinematics(goal_point.PE)
+# print("goal joint space")
+# print("q1_sol ", goal_joint_space.q1)
+# print("q2_sol ", goal_joint_space.q2)
+# print("q3_sol ", goal_joint_space.q3)
 
-RRR.update_joint(goal_joint_space)
+# RRR.update_joint(goal_joint_space)
 
-position = RRR.Forward_Kinematics()
-print("goal point")
-print("Px ", position.PE.x)
-print("Py ", position.PE.y)
-print("Pz ", position.PE.z)
+# position = RRR.Forward_Kinematics()
+# print("goal point")
+# print("Px ", position.PE.x)
+# print("Py ", position.PE.y)
+# print("Pz ", position.PE.z)
 
-# Plot check
+# PLot check
+def Robot_plot(joint_pos):
+    # Extract joint positions
+    p1 = [float(joint_pos.P1.x), float(joint_pos.P1.y), float(joint_pos.P1.z)]
+    p2 = [float(joint_pos.P2.x), float(joint_pos.P2.y), float(joint_pos.P2.z)]
+    p3 = [float(joint_pos.P3.x), float(joint_pos.P3.y), float(joint_pos.P3.z)]
+    pE = [float(joint_pos.PE.x), float(joint_pos.PE.y), float(joint_pos.PE.z)]
+
+    # Extract coordinates for links
+    x_coords = [p1[0], p2[0], p3[0], pE[0]]
+    y_coords = [p1[1], p2[1], p3[1], pE[1]]
+    z_coords = [p1[2], p2[2], p3[2], pE[2]]
+
+    # Create a 3D plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Plot the joints
+    ax.scatter(*p1, color='red', s=100, label='Base (P1)')
+    ax.scatter(*p2, color='blue', s=100, label='Joint 1 (P2)')
+    ax.scatter(*p3, color='green', s=100, label='Joint 2 (P3)')
+    ax.scatter(*pE, color='purple', s=100, label='End Effector (PE)')
+
+    # Plot the links
+    ax.plot(x_coords, y_coords, z_coords, color='black', label='Robot Links')
+
+    # Add labels and legend
+    ax.set_xlabel('X-axis')
+    ax.set_ylabel('Y-axis')
+    ax.set_zlabel('Z-axis')
+    ax.legend()
+    # ax.text(joint_pos.PE.x, joint_pos.PE.y, joint_pos.PE.z, f"({joint_pos.PE.x:.2f}, {joint_pos.PE.y:.2f}, {joint_pos.PE.z:.2f})", color='orange')
+
+    # Set axis limits
+    max_range = float(max(
+        max(abs(coord) for coord in x_coords),
+        max(abs(coord) for coord in y_coords),
+        max(abs(coord) for coord in z_coords)
+    ))
+    ax.set_xlim([-max_range, max_range])
+    ax.set_ylim([-max_range, max_range])
+    ax.set_zlim([0, max_range])
+
+    # Show the plot
+    plt.show()
+
+# Plot the robot
 Robot_plot(goal_point)
