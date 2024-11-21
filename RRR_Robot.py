@@ -1,4 +1,5 @@
 import sympy as sp
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -148,12 +149,84 @@ print("Pz ", goal_point.PE.z)
 # print("Pz ", position.PE.z)
 
 # PLot check
-def Robot_plot(joint_pos):
+# def Robot_plot(joint_pos):
+#     # Extract joint positions
+#     p1 = [float(joint_pos.P1.x), float(joint_pos.P1.y), float(joint_pos.P1.z)]
+#     p2 = [float(joint_pos.P2.x), float(joint_pos.P2.y), float(joint_pos.P2.z)]
+#     p3 = [float(joint_pos.P3.x), float(joint_pos.P3.y), float(joint_pos.P3.z)]
+#     pE = [float(joint_pos.PE.x), float(joint_pos.PE.y), float(joint_pos.PE.z)]
+
+#     # Extract coordinates for links
+#     x_coords = [p1[0], p2[0], p3[0], pE[0]]
+#     y_coords = [p1[1], p2[1], p3[1], pE[1]]
+#     z_coords = [p1[2], p2[2], p3[2], pE[2]]
+
+#     # Create a 3D plot
+#     fig = plt.figure()
+#     ax = fig.add_subplot(111, projection='3d')
+
+#     # Plot the joints
+#     ax.scatter(*p1, color='red', s=100, label='Base (P1)')
+#     ax.scatter(*p2, color='blue', s=100, label='Joint 1 (P2)')
+#     ax.scatter(*p3, color='green', s=100, label='Joint 2 (P3)')
+#     ax.scatter(*pE, color='purple', s=100, label='End Effector (PE)')
+
+#     # Plot the links
+#     ax.plot(x_coords, y_coords, z_coords, color='black', label='Robot Links')
+
+#     # Add labels and legend
+#     ax.set_xlabel('X-axis')
+#     ax.set_ylabel('Y-axis')
+#     ax.set_zlabel('Z-axis')
+#     ax.legend()
+#     # ax.text(joint_pos.PE.x, joint_pos.PE.y, joint_pos.PE.z, f"({joint_pos.PE.x:.2f}, {joint_pos.PE.y:.2f}, {joint_pos.PE.z:.2f})", color='orange')
+
+#     # Set axis limits
+#     max_range = float(max(
+#         max(abs(coord) for coord in x_coords),
+#         max(abs(coord) for coord in y_coords),
+#         max(abs(coord) for coord in z_coords)
+#     ))
+#     ax.set_xlim([-max_range, max_range])
+#     ax.set_ylim([-max_range, max_range])
+#     ax.set_zlim([0, max_range])
+
+#     # Show the plot
+#     plt.show()
+
+# # Plot the robot
+# Robot_plot(goal_point)
+
+# obstacle 
+class Obstacle:
+    def __init__(self, x, y, z, radius):
+        self.center = Point(x, y, z)
+        self.radius = radius
+
+def Obstacle_Check(joint_pos, obstacles):
+    """
+    Check if the robot collides with any obstacle.
+    Returns 1 if a collision occurs, otherwise 0.
+    """
+    joints = [joint_pos.P1, joint_pos.P2, joint_pos.P3, joint_pos.PE]
+    for obstacle in obstacles:
+        for joint in joints:
+            distance = np.sqrt(
+                (float(joint.x) - float(obstacle.center.x))**2 +
+                (float(joint.y) - float(obstacle.center.y))**2 +
+                (float(joint.z) - float(obstacle.center.z))**2
+            )
+            if distance < obstacle.radius:
+                return 1  # Collision detected
+    return 0  # No collision
+
+def Robot_plot_with_obstacles(joint_pos, goal_point, obstacles):
     # Extract joint positions
     p1 = [float(joint_pos.P1.x), float(joint_pos.P1.y), float(joint_pos.P1.z)]
     p2 = [float(joint_pos.P2.x), float(joint_pos.P2.y), float(joint_pos.P2.z)]
     p3 = [float(joint_pos.P3.x), float(joint_pos.P3.y), float(joint_pos.P3.z)]
     pE = [float(joint_pos.PE.x), float(joint_pos.PE.y), float(joint_pos.PE.z)]
+    goal = [float(goal_point.x), float(goal_point.y), float(goal_point.z)]
 
     # Extract coordinates for links
     x_coords = [p1[0], p2[0], p3[0], pE[0]]
@@ -169,22 +242,30 @@ def Robot_plot(joint_pos):
     ax.scatter(*p2, color='blue', s=100, label='Joint 1 (P2)')
     ax.scatter(*p3, color='green', s=100, label='Joint 2 (P3)')
     ax.scatter(*pE, color='purple', s=100, label='End Effector (PE)')
+    ax.scatter(*goal, color='orange', s=100, label='Goal Point')
 
     # Plot the links
     ax.plot(x_coords, y_coords, z_coords, color='black', label='Robot Links')
+
+    # Plot obstacles
+    for obstacle in obstacles:
+        u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
+        x = obstacle.radius * np.cos(u) * np.sin(v) + float(obstacle.center.x)
+        y = obstacle.radius * np.sin(u) * np.sin(v) + float(obstacle.center.y)
+        z = obstacle.radius * np.cos(v) + float(obstacle.center.z)
+        ax.plot_surface(x, y, z, color='r', alpha=0.3)
 
     # Add labels and legend
     ax.set_xlabel('X-axis')
     ax.set_ylabel('Y-axis')
     ax.set_zlabel('Z-axis')
     ax.legend()
-    # ax.text(joint_pos.PE.x, joint_pos.PE.y, joint_pos.PE.z, f"({joint_pos.PE.x:.2f}, {joint_pos.PE.y:.2f}, {joint_pos.PE.z:.2f})", color='orange')
 
     # Set axis limits
     max_range = float(max(
-        max(abs(coord) for coord in x_coords),
-        max(abs(coord) for coord in y_coords),
-        max(abs(coord) for coord in z_coords)
+        max(abs(coord) for coord in x_coords + [goal[0]]),
+        max(abs(coord) for coord in y_coords + [goal[1]]),
+        max(abs(coord) for coord in z_coords + [goal[2]])
     ))
     ax.set_xlim([-max_range, max_range])
     ax.set_ylim([-max_range, max_range])
@@ -193,5 +274,18 @@ def Robot_plot(joint_pos):
     # Show the plot
     plt.show()
 
-# Plot the robot
-Robot_plot(goal_point)
+# setting 
+obstacles = [
+    Obstacle(x=2, y=0.8, z=2, radius=0.5),
+    Obstacle(x=-1, y=-1, z=1.5, radius=0.3),
+    Obstacle(x=0.8, y=2, z=3, radius=0.4)
+]
+goal_point = Point(x=2, y=2, z=2.5)
+joint_pos = RRR.Forward_Kinematics()
+
+# Check for collision
+collision_status = Obstacle_Check(joint_pos, obstacles)
+print("Collision Status:", "Collision!" if collision_status == 1 else "No Collision")
+
+# Plot the robot with obstacles
+Robot_plot_with_obstacles(joint_pos, goal_point, obstacles)

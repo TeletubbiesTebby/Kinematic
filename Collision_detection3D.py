@@ -194,7 +194,7 @@ class NLinkArm:
             x = obstacle[3] * np.outer(np.cos(u), np.sin(v)) + obstacle[0]
             y = obstacle[3] * np.outer(np.sin(u), np.sin(v)) + obstacle[1]
             z = obstacle[3] * np.outer(np.ones(np.size(u)), np.cos(v)) + obstacle[2]
-            ax.plot_surface(x, y, z, color='r', edgecolor='none')  # สีฟ้าพร้อมค่าความโปร่งใส
+            ax.plot_surface(x, y, z, color='r', edgecolor='none')  
 
         # วาดแขนกล
         for i in range(len(self.points) - 1):
@@ -209,7 +209,6 @@ class NLinkArm:
         ax.set_zlim([-self.lim, self.lim])
         plt.draw()
         plt.pause(0.1)  # พักเล็กน้อยเพื่ออัปเดตการแสดงผล
-
 
 if __name__ == '__main__':
     main()
