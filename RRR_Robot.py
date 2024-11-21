@@ -1,6 +1,12 @@
 import sympy as sp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import random
+from math import pi
+import numpy as np
+
+# Simulation parameters
+M = 100
 
 class Point:
     def __init__(self, x=0, y=0, z=0):
@@ -117,38 +123,81 @@ class RRR_Robot:
         return  joint_pos_plot # (P1, P2, P3, PE)
 
 
-def Robot_plot(joint_pos):
-    p1 = joint_pos.P1
-    p2 = joint_pos.P2
-    p3 = joint_pos.P3
-    pE = joint_pos.PE
+# ฟังก์ชันสุ่มสร้างสิ่งกีดขวาง
+def generate_random_obstacles(num_obstacles=3, max_radius=0.5, space_limit=2, min_distance=0.1):
+    """
+    สร้างสิ่งกีดขวางแบบสุ่มในพื้นที่ 3D โดยไม่มีการทับซ้อน
+    :param num_obstacles: จำนวนสิ่งกีดขวางที่ต้องการ
+    :param max_radius: รัศมีสูงสุดของสิ่งกีดขวาง
+    :param space_limit: ขอบเขตของพื้นที่ (x, y, z จะถูกจำกัดใน -space_limit ถึง +space_limit)
+    :param min_distance: ระยะขั้นต่ำระหว่างจุดศูนย์กลางของสิ่งกีดขวาง (ไม่รวมผลรวมรัศมี)
+    :return: รายการสิ่งกีดขวางในรูปแบบ [[x, y, z, r], ...]
+    """
+    obstacles = []
 
-RRR = RRR_Robot(l1=3, l2=1, l3=0.4, q1=0.2, q2=1.3, q3=0.8)
+    for _ in range(num_obstacles):
+        while True:  # วนลูปจนกว่าจะหาตำแหน่งที่ไม่ชนได้
+            x = random.uniform(-space_limit, space_limit)
+            y = random.uniform(-space_limit, space_limit)
+            z = random.uniform(-space_limit, space_limit)
+            r = random.uniform(0.1, max_radius)  # รัศมีขั้นต่ำ 0.1
 
-# check Forward_Kinematics 
-goal_point = RRR.Forward_Kinematics()
-print("goal point")
-print("Px ", goal_point.PE.x)
-print("Py ", goal_point.PE.y)
-print("Pz ", goal_point.PE.z)
+            # ตรวจสอบว่ามีการชนกับสิ่งกีดขวางที่สร้างไปแล้วหรือไม่
+            valid = True
+            for existing_obstacle in obstacles:
+                ex, ey, ez, er = existing_obstacle
+                distance = np.sqrt((x - ex)**2 + (y - ey)**2 + (z - ez)**2)
+                if distance < r + er + min_distance:  # ระยะทางต้องมากกว่ารัศมีรวมและระยะขั้นต่ำ
+                    valid = False
+                    break
 
-# check Inverse_Kinematic
-# goal_joint_space = RRR.Inverse_Kinematics(goal_point.PE)
-# print("goal joint space")
-# print("q1_sol ", goal_joint_space.q1)
-# print("q2_sol ", goal_joint_space.q2)
-# print("q3_sol ", goal_joint_space.q3)
+            if valid:
+                obstacles.append([x, y, z, r])
+                break
 
-# RRR.update_joint(goal_joint_space)
+    return obstacles
 
-# position = RRR.Forward_Kinematics()
-# print("goal point")
-# print("Px ", position.PE.x)
-# print("Py ", position.PE.y)
-# print("Pz ", position.PE.z)
+def detect_collision(obstacles, joint_position):
+    """
+    ตรวจสอบว่าตำแหน่งของข้อต่อ (joint_position) อยู่ใกล้กับสิ่งกีดขวาง (obstacles) หรือไม่
+    """
+    for obstacle in obstacles:
+        obstacle_center = np.array(obstacle[:3])  # จุดศูนย์กลางของสิ่งกีดขวาง
+        radius = obstacle[3]                     # รัศมีของสิ่งกีดขวาง
+        joint_vec = np.array(joint_position)     # ตำแหน่งของข้อต่อ
+
+        # คำนวณระยะทางระหว่างข้อต่อและจุดศูนย์กลางของสิ่งกีดขวาง
+        distance = np.linalg.norm(joint_vec - obstacle_center)
+
+        # ตรวจสอบว่าระยะทางน้อยกว่าหรือเท่ากับรัศมีหรือไม่
+        if distance <= radius:
+            return 1  # มีการชนหรือใกล้สิ่งกีดขวาง
+    return 0  # ไม่มีการชน
+
+def get_occupancy_grid(arm, obstacles):
+    grid = np.zeros((M, M, M), dtype=int)  # สร้าง Grid 3 มิติ
+    theta_list = [2 * i * pi / M for i in range(M)]  # มุมในเรเดียน
+
+    for i in range(M):
+        for j in range(M):
+            for k in range(M):
+                arm.update_joints([theta_list[i], theta_list[j], theta_list[k]])
+                points = arm.points  # ได้ตำแหน่งของแขนกลแต่ละจุด
+                collision_detected = False
+
+                # ตรวจสอบการชนในแต่ละลิงก์
+                for point in points:
+                    if detect_collision(obstacles, point):
+                        collision_detected = True
+                        break
+
+                # อัปเดต Grid
+                grid[i][j][k] = int(collision_detected)
+    return grid
+
 
 # PLot check
-def Robot_plot(joint_pos):
+def Show_plot(joint_pos, obstacles):
     # Extract joint positions
     p1 = [float(joint_pos.P1.x), float(joint_pos.P1.y), float(joint_pos.P1.z)]
     p2 = [float(joint_pos.P2.x), float(joint_pos.P2.y), float(joint_pos.P2.z)]
@@ -173,6 +222,15 @@ def Robot_plot(joint_pos):
     # Plot the links
     ax.plot(x_coords, y_coords, z_coords, color='black', label='Robot Links')
 
+    # วาดสิ่งกีดขวาง (ทรงกลม 3 มิติ)
+    for obstacle in obstacles:
+        u = np.linspace(0, 2 * pi, 100)  # มุมสำหรับสร้างทรงกลม
+        v = np.linspace(0, pi, 100)
+        x = obstacle[3] * np.outer(np.cos(u), np.sin(v)) + obstacle[0]
+        y = obstacle[3] * np.outer(np.sin(u), np.sin(v)) + obstacle[1]
+        z = obstacle[3] * np.outer(np.ones(np.size(u)), np.cos(v)) + obstacle[2]
+        ax.plot_surface(x, y, z, color='r', edgecolor='none')  # สีฟ้าพร้อมค่าความโปร่งใส
+
     # Add labels and legend
     ax.set_xlabel('X-axis')
     ax.set_ylabel('Y-axis')
@@ -193,5 +251,38 @@ def Robot_plot(joint_pos):
     # Show the plot
     plt.show()
 
-# Plot the robot
-Robot_plot(goal_point)
+def main():
+    RRR = RRR_Robot(l1=1, l2=1, l3=0.4, q1=0.1, q2=-0.5, q3=0.8)
+
+    # สร้างสิ่งกีดขวางแบบสุ่ม
+    obstacles = generate_random_obstacles()
+
+    print(obstacles)
+
+    # check Forward_Kinematics 
+    goal_point = RRR.Forward_Kinematics()
+    print("goal point")
+    print("Px ", goal_point.PE.x)
+    print("Py ", goal_point.PE.y)
+    print("Pz ", goal_point.PE.z)
+
+    # check Inverse_Kinematic
+    # goal_joint_space = RRR.Inverse_Kinematics(goal_point.PE)
+    # print("goal joint space")
+    # print("q1_sol ", goal_joint_space.q1)
+    # print("q2_sol ", goal_joint_space.q2)
+    # print("q3_sol ", goal_joint_space.q3)
+
+    # RRR.update_joint(goal_joint_space)
+
+    # position = RRR.Forward_Kinematics()
+    # print("goal point")
+    # print("Px ", position.PE.x)
+    # print("Py ", position.PE.y)
+    # print("Pz ", position.PE.z)
+
+    # Plot the robot
+    Show_plot(goal_point, obstacles)
+
+if __name__ == '__main__':
+    main()
