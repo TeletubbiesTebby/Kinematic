@@ -2,21 +2,19 @@ from math import pi
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
+import random
 plt.ion()
 
 # Simulation parameters
 M = 100
-obstacles = [
-    [1.75, 0.75, 0.6, 0.3],  # ทรงกลมที่จุด (1.75, 0.75, 0.6) รัศมี 0.3
-    [0.55, 1.5, 1.2, 0.5],   # ทรงกลมที่จุด (0.55, 1.5, 1.2) รัศมี 0.5
-    [0, -1, 0.5, 0.25]       # ทรงกลมที่จุด (0, -1, 0.5) รัศมี 0.25
-]
 
 def main():
     arm = NLinkArm([1, 1, 1], [0, 0, 0])  # แขนกล 3 ข้อต่อ
     start = (10, 50, 20)  # ตำแหน่งเริ่มต้นใน Grid
     goal = (58, 56, 45)   # ตำแหน่งเป้าหมายใน Grid
+
+    # สร้างสิ่งกีดขวางแบบสุ่ม
+    obstacles = generate_random_obstacles()
 
     grid = get_occupancy_grid(arm, obstacles)
     plt.imshow(grid.max(axis=2))  # แสดงภาพรวม Grid (มุมมอง 2D)
@@ -31,6 +29,41 @@ def main():
         theta3 = 2 * pi * node[2] / M - pi
         arm.update_joints([theta1, theta2, theta3])
         arm.plot(obstacles=obstacles)
+
+# ฟังก์ชันสุ่มสร้างสิ่งกีดขวาง
+def generate_random_obstacles(num_obstacles=3, max_radius=1, space_limit=3, min_distance=0.1):
+    """
+    สร้างสิ่งกีดขวางแบบสุ่มในพื้นที่ 3D โดยไม่มีการทับซ้อน
+    :param num_obstacles: จำนวนสิ่งกีดขวางที่ต้องการ
+    :param max_radius: รัศมีสูงสุดของสิ่งกีดขวาง
+    :param space_limit: ขอบเขตของพื้นที่ (x, y, z จะถูกจำกัดใน -space_limit ถึง +space_limit)
+    :param min_distance: ระยะขั้นต่ำระหว่างจุดศูนย์กลางของสิ่งกีดขวาง (ไม่รวมผลรวมรัศมี)
+    :return: รายการสิ่งกีดขวางในรูปแบบ [[x, y, z, r], ...]
+    """
+    obstacles = []
+
+    for _ in range(num_obstacles):
+        while True:  # วนลูปจนกว่าจะหาตำแหน่งที่ไม่ชนได้
+            x = random.uniform(-space_limit, space_limit)
+            y = random.uniform(-space_limit, space_limit)
+            z = random.uniform(-space_limit, space_limit)
+            r = random.uniform(0.1, max_radius)  # รัศมีขั้นต่ำ 0.1
+
+            # ตรวจสอบว่ามีการชนกับสิ่งกีดขวางที่สร้างไปแล้วหรือไม่
+            valid = True
+            for existing_obstacle in obstacles:
+                ex, ey, ez, er = existing_obstacle
+                distance = np.sqrt((x - ex)**2 + (y - ey)**2 + (z - ez)**2)
+                if distance < r + er + min_distance:  # ระยะทางต้องมากกว่ารัศมีรวมและระยะขั้นต่ำ
+                    valid = False
+                    break
+
+            if valid:
+                obstacles.append([x, y, z, r])
+                break
+
+    return obstacles
+
 
 def detect_collision(obstacles, joint_position):
     """
