@@ -1,4 +1,5 @@
 import sympy as sp
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import random
@@ -331,6 +332,7 @@ def Show_plot(joint_pos, obstacles):
     p2 = [float(joint_pos.P2.x), float(joint_pos.P2.y), float(joint_pos.P2.z)]
     p3 = [float(joint_pos.P3.x), float(joint_pos.P3.y), float(joint_pos.P3.z)]
     pE = [float(joint_pos.PE.x), float(joint_pos.PE.y), float(joint_pos.PE.z)]
+    goal = [float(goal_point.x), float(goal_point.y), float(goal_point.z)]
 
     # Extract coordinates for links
     x_coords = [p1[0], p2[0], p3[0], pE[0]]
@@ -346,6 +348,7 @@ def Show_plot(joint_pos, obstacles):
     ax.scatter(*p2, color='blue', s=100, label='Joint 1 (P2)')
     ax.scatter(*p3, color='green', s=100, label='Joint 2 (P3)')
     ax.scatter(*pE, color='purple', s=100, label='End Effector (PE)')
+    ax.scatter(*goal, color='orange', s=100, label='Goal Point')
 
     # Plot the links
     ax.plot(x_coords, y_coords, z_coords, color='black', label='Robot Links')
