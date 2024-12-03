@@ -7,12 +7,13 @@ import numpy as np
 
 # Simulation parameters
 M = 100
+
 obstacles = [
-    [1.5, -2, 3, 0.7],  # ทรงกลมที่จุด (1.75, 0.75, 0.6) รัศมี 0.3
-    [2.5, 2, 4, 0.5],  # ทรงกลมที่จุด (1.75, 0.75, 0.6) รัศมี 0.3
-    [-2.5, 0, 1.2, 0.5],   # ทรงกลมที่จุด (0.55, 1.5, 1.2) รัศมี 0.5
-    [0, -1, 3, 0.5],       # ทรงกลมที่จุด (0, -1, 0.5) รัศมี 0.25
-    [-1.75, 2.5 , 0.5, 0.5 , 0.8]       # ทรงกลมที่จุด (0, -1, 0.5) รัศมี 0.25
+    [1.5, -2, 3, 0.7],#x,y,z รัศมี 
+    [2.5, 2, 4, 0.5], 
+    [-2.5, 0, 1.2, 0.5],   
+    [0, -1, 3, 0.5],      
+    [-1.75, 2.5 , 0.5, 0.5 , 0.8]       
 ]
 
 class Point:
@@ -210,12 +211,12 @@ def detect_collision(obstacles, joint_positions):
         # Convert all inputs to float arrays to ensure compatibility with numpy
         line_start = np.array([float(coord.evalf()) if hasattr(coord, "evalf") else float(coord) for coord in line_start], dtype=float)
         line_end = np.array([float(coord.evalf()) if hasattr(coord, "evalf") else float(coord) for coord in line_end], dtype=float)
-        point = np.array([float(coord) for coord in point], dtype=float)
+        point_obstacle = np.array([float(coord) for coord in point], dtype=float)
 
         line_vec = line_end - line_start
-        point_vec = point - line_start
-
+        point_vec = point_obstacle - line_start
         line_len = np.linalg.norm(line_vec)
+        
         if line_len > 0:
             line_unit_vec = line_vec / line_len
         else:
