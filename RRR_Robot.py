@@ -461,7 +461,47 @@ def is_reachable(goal_joint):
     print("The goal is reachable. Real joint angles found.")
     return True
 
+#---------------------------------------TSP------------------------------------------#
 
+def calculate_joint_distance(path, M):
+    """
+    Calculates the total angular distance that each joint has to move along the path.
+    Assumes path is a list of tuples representing joint angles in grid indices.
+    
+    Parameters:
+    - path: A list of tuples representing joint angles at each step in the path (in grid indices).
+    - M: The size of the grid (number of discrete steps per joint angle).
+    
+    Returns:
+    - q1_dist, q2_dist, q3_dist: The total distance each joint moves along the path (in radians).
+    """
+    def angle_distance(a1, a2, M):
+        """Calculate the shortest angular distance between two grid indices."""
+        # Convert grid indices to angles
+        scale = (2 * pi) / M
+        theta1 = a1 * scale
+        theta2 = a2 * scale
+        
+        # Calculate the shortest distance (accounting for the toroidal wraparound)
+        delta_theta = (theta2 - theta1 + pi) % (2 * pi) - pi
+        return abs(delta_theta)
+    
+    # Initialize the total distances for each joint
+    q1_dist = 0
+    q2_dist = 0
+    q3_dist = 0
+    
+    # Calculate the total angular distance for each joint
+    for i in range(1, len(path)):
+        q1_dist += angle_distance(path[i-1][0], path[i][0], M)
+        q2_dist += angle_distance(path[i-1][1], path[i][1], M)
+        q3_dist += angle_distance(path[i-1][2], path[i][2], M)
+    
+    return q1_dist, q2_dist, q3_dist
+
+
+def TSP():
+    pass
 
 #------------------------------------Plot & Animation---------------------------------#
 
@@ -588,6 +628,37 @@ def Show_plot(joint_pos, obstacles):
 #     Show_plot(goal_point, obstacles)
 #     print("Visualization Complete!")
 
+# # Test the A* algorithm
+# if __name__ == "__main__":
+#     M = 100  # Grid size
+#     grid = np.zeros((M, M, M), dtype=int)  # Empty grid
+    
+#     # Add obstacles (example)
+#     grid[25][25][25] = 1
+#     grid[50][50][50] = 1
+#     grid[75][75][75] = 1
+    
+#     # Define start and goal positions in grid indices
+#     start = (10, 10, 10)
+#     goal = (90, 90, 90)
+    
+#     # Run A* algorithm
+#     path = astar_torus(grid, start, goal, M)
+#     print("Path found:", path)
+
+
+# Test jpint moving distance
+# if __name__ == "__main__":
+#     # Example path with joint angles (in grid indices)
+#     path = [(0, 10, 0), (1, 11, 1), (2, 12, 2)]
+
+#     # Calculate the distance for each joint
+#     q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
+
+#     print(f"Joint 1 distance: {q1_dist}")
+#     print(f"Joint 2 distance: {q2_dist}")
+#     print(f"Joint 3 distance: {q3_dist}")
+
 
 # # Create toroidal grid
 # def main():
@@ -597,7 +668,7 @@ def Show_plot(joint_pos, obstacles):
 #     # Save tor_grid to file
 #     save_tor_grid(tor_grid, 'tor_grid.npy')
 
-
+# We use this
 def main():
 
     tor_grid = load_tor_grid('tor_grid.npy')    # Load Grid ที่มี Obstacle
@@ -649,6 +720,12 @@ def main():
                 print("Path found!")
                 print(path)
                 plot_path(path)
+                q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
+
+                print(f"Joint 1 distance: {q1_dist}")
+                print(f"Joint 2 distance: {q2_dist}")
+                print(f"Joint 3 distance: {q3_dist}")
+
             else:
                 print("No path found!")
 
@@ -656,20 +733,3 @@ def main():
 if __name__ == '__main__':
     main()
 
-# # Test the A* algorithm
-# if __name__ == "__main__":
-#     M = 100  # Grid size
-#     grid = np.zeros((M, M, M), dtype=int)  # Empty grid
-    
-#     # Add obstacles (example)
-#     grid[25][25][25] = 1
-#     grid[50][50][50] = 1
-#     grid[75][75][75] = 1
-    
-#     # Define start and goal positions in grid indices
-#     start = (10, 10, 10)
-#     goal = (90, 90, 90)
-    
-#     # Run A* algorithm
-#     path = astar_torus(grid, start, goal, M)
-#     print("Path found:", path)
