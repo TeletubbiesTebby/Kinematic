@@ -4,8 +4,10 @@ from mpl_toolkits.mplot3d import Axes3D
 import random
 from math import pi
 import numpy as np
+import heapq
+import math
 
-# Simulation parameters
+#---------------------------------Simulation parameters----------------------------------#
 M = 100
 
 obstacles = [
@@ -15,6 +17,8 @@ obstacles = [
     [0, -1, 3, 0.5],      
     [-1.75, 2.5 , 0.5, 0.5 , 0.8]       
 ]
+
+#-------------------------------------Define Class----------------------------------------#
 
 class Point:
     def __init__(self, x=0, y=0, z=0):
@@ -34,6 +38,191 @@ class Joint:
         self.q1 = q1
         self.q2 = q2
         self.q3 = q3
+    
+    def get_angles(self):
+        return [self.q1, self.q2, self.q3]
+    
+#---------------------------Toroidal Grid & Obstacle detection-----------------------------#
+
+def generate_random_obstacles(num_obstacles=3, max_radius=0.5, x_limit=(-3, 3), y_limit=(-3, 3), z_limit=(0, 6), min_distance=0.1):
+    """
+    Generate random obstacles in the 3D workspace without overlapping.
+    Obstacles are constrained within the given limits.
+    :param num_obstacles: Number of obstacles to generate.
+    :param max_radius: Maximum radius of the obstacles.
+    :param x_limit: X-axis limits for obstacles (tuple of min and max).
+    :param y_limit: Y-axis limits for obstacles (tuple of min and max).
+    :param z_limit: Z-axis limits for obstacles (tuple of min and max).
+    :param min_distance: Minimum distance between obstacles.
+    :return: List of obstacles in the form [[x, y, z, r], ...]
+    """
+    obstacles = []
+
+    for _ in range(num_obstacles):
+        while True:
+            x = random.uniform(x_limit[0], x_limit[1])
+            y = random.uniform(y_limit[0], y_limit[1])
+            z = random.uniform(z_limit[0], z_limit[1])
+            r = random.uniform(0.1, max_radius)
+
+            # Ensure the obstacle does not overlap with existing ones
+            valid = True
+            for existing_obstacle in obstacles:
+                ex, ey, ez, er = existing_obstacle
+                distance = np.sqrt((x - ex) ** 2 + (y - ey) ** 2 + (z - ez) ** 2)
+                if distance < r + er + min_distance:
+                    valid = False
+                    break
+
+            if valid:
+                obstacles.append([x, y, z, r])
+                break
+
+    return obstacles
+
+def detect_collision(obstacles, joint_positions):
+    """
+    Check if the joint positions or the arms (segments between joints) are close to any obstacles.
+    :param obstacles: List of obstacles in the form [[x, y, z, r], ...].
+    :param joint_positions: 2D list of joint positions [[x1, y1, z1], [x2, y2, z2], ...].
+    :return: 1 if there is a collision, 0 otherwise.
+    """
+    def point_to_line_distance(point, line_start, line_end):
+        """
+        Calculate the shortest distance from a point to a line segment.
+        :param point: The point [x, y, z].
+        :param line_start: Start point of the line segment [x, y, z].
+        :param line_end: End point of the line segment [x, y, z].
+        :return: The shortest distance.
+        """
+        # Convert all inputs to float arrays to ensure compatibility with numpy
+        line_start = np.array([float(coord.evalf()) if hasattr(coord, "evalf") else float(coord) for coord in line_start], dtype=float)
+        line_end = np.array([float(coord.evalf()) if hasattr(coord, "evalf") else float(coord) for coord in line_end], dtype=float)
+        point = np.array([float(coord) for coord in point], dtype=float)
+
+        line_vec = line_end - line_start
+        point_vec = point - line_start
+
+        line_len = np.linalg.norm(line_vec)
+        if line_len > 0:
+            line_unit_vec = line_vec / line_len
+        else:
+            line_unit_vec = line_vec  # Avoid division by zero for degenerate segments
+        projection = np.dot(point_vec, line_unit_vec)
+
+        if projection < 0:
+            # Closest point is the start of the line
+            closest_point = line_start
+        elif projection > line_len:
+            # Closest point is the end of the line
+            closest_point = line_end
+        else:
+            # Closest point is somewhere along the line
+            closest_point = line_start + projection * line_unit_vec
+
+        return np.linalg.norm(point - closest_point)
+
+    # Initialize variables to track distances when no collision occurs
+    min_joint_distance = float('inf')
+    min_segment_distance = float('inf')
+
+    # Check collision for each joint
+    for joint_position in joint_positions:
+        joint_vec = np.array([float(coord.evalf()) if hasattr(coord, "evalf") else float(coord) for coord in joint_position])  # Convert to float
+
+        for obstacle in obstacles:
+            obstacle_center = np.array([float(coord) for coord in obstacle[:3]])  # Convert to float
+            radius = float(obstacle[3])  # Convert to float
+
+            # Calculate distance
+            distance = np.linalg.norm(joint_vec - obstacle_center)
+
+            # Track the smallest distance if no collision
+            if distance < min_joint_distance:
+                min_joint_distance = distance
+
+            # Check if within the radius
+            if distance <= radius:
+                print(f"⚠️  Collision detected at joint position {joint_vec}\nwith obstacle {obstacle_center}.")
+                return 1  # Collision detected with a joint
+
+    # Check collision for each arm segment
+    for i in range(len(joint_positions) - 1):
+        line_start = joint_positions[i]
+        line_end = joint_positions[i + 1]
+
+        for obstacle in obstacles:
+            obstacle_center = np.array([float(coord) for coord in obstacle[:3]])  # Convert to float
+            radius = float(obstacle[3])  # Convert to float
+
+            # Calculate the shortest distance from the obstacle to the arm segment
+            distance = point_to_line_distance(obstacle_center, line_start, line_end)
+
+            # Track the smallest distance if no collision
+            if distance < min_segment_distance:
+                min_segment_distance = distance
+
+            if distance <= radius:
+                print(f"⚠️  Collision detected with arm segment between {list(map(float, line_start))}\nand {list(map(float, line_end))}\n"
+                      f"and obstacle {obstacle_center}.")
+                return 1  # Collision detected with an arm segment
+
+    # Print minimum distances if no collision occurs
+    print(f"✅ No collision detected.")
+    print(f"Minimum distance between joints and obstacles: {min_joint_distance:.2f}")
+    print(f"Minimum distance between arm segments and obstacles: {min_segment_distance:.2f}")
+    return 0  # No collision
+
+def get_occupancy_grid(arm, obstacles):
+    grid = np.zeros((M, M, M), dtype=int)  # Create a 3D grid
+    theta_list = [2 * i * pi / M for i in range(M)]  # Generate joint angles
+
+    for i in range(M):
+        for j in range(M):
+            for k in range(M):
+                # Update robot's joint angles
+                new_joint = Joint(theta_list[i], theta_list[j], theta_list[k])
+                arm.update_joint(new_joint)
+
+                # Get joint positions
+                joint_points = arm.Forward_Kinematics()  # Get forward kinematics results
+                points = convert_goal_point_to_2d_list(joint_points)  # Convert to 2D list
+
+                # Check for collisions
+                collision_detected = detect_collision(obstacles, points)
+
+                # Update grid based on collision detection
+                grid[i][j][k] = collision_detected
+    return grid
+
+
+def convert_goal_point_to_2d_list(goal_point):
+    """
+    Convert a Joint_Pos_Plot object containing Point objects into a 2D list.
+    :param goal_point: Joint_Pos_Plot object (contains P1, P2, P3, PE)
+    :return: 2D list with coordinates of P1, P2, P3, PE
+    """
+    return [
+        [goal_point.P1.x, goal_point.P1.y, goal_point.P1.z],
+        [goal_point.P2.x, goal_point.P2.y, goal_point.P2.z],
+        [goal_point.P3.x, goal_point.P3.y, goal_point.P3.z],
+        [goal_point.PE.x, goal_point.PE.y, goal_point.PE.z]
+    ]
+
+# Function for saving toroidal grid
+def save_tor_grid(tor_grid, filename):
+    np.save(filename, tor_grid)
+
+def load_tor_grid(filename):
+    return np.load(filename, allow_pickle=True)
+
+def angle_to_grid_index(theta, grid_size):
+    """Maps a joint angle to its corresponding grid index."""
+    theta = (theta + pi) % (2 * pi)  # Normalize angle to [0, 2pi]
+    index = int((theta / (2 * pi)) * grid_size)
+    return index
+
+#---------------------------------------RRR Robot------------------------------------------#
 
 class RRR_Robot:
     def __init__(self, l1, l2, l3, q1, q2, q3):
@@ -129,6 +318,8 @@ class RRR_Robot:
         joint_pos_plot = Joint_Pos_Plot(P1, P2, P3, PE)
 
         return  joint_pos_plot # (P1, P2, P3, PE)
+    
+#---------------------------------------A* Algorithm---------------------------------------#
 
 
 def generate_random_obstacles(num_obstacles=3, max_radius=0.5, x_limit=(-3, 3), y_limit=(-3, 3), z_limit=(0, 6), min_distance=0.1):
@@ -323,8 +514,237 @@ def convert_goal_point_to_2d_list(goal_point):
         [goal_point.P2.x, goal_point.P2.y, goal_point.P2.z],
         [goal_point.P3.x, goal_point.P3.y, goal_point.P3.z],
         [goal_point.PE.x, goal_point.PE.y, goal_point.PE.z]
+    ]
+# Define 26 possible moves (including diagonals in all 3 dimensions)
+MOVEMENTS = [
+    (1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1),  # 6 face neighbors
+    (1, 1, 0), (1, -1, 0), (-1, 1, 0), (-1, -1, 0),  # Diagonal neighbors on x-y plane
+    (1, 0, 1), (1, 0, -1), (-1, 0, 1), (-1, 0, -1),  # Diagonal neighbors on x-z plane
+    (0, 1, 1), (0, 1, -1), (0, -1, 1), (0, -1, -1),  # Diagonal neighbors on y-z plane
+    (1, 1, 1), (1, 1, -1), (1, -1, 1), (1, -1, -1),  # Full diagonal neighbors
+    (-1, 1, 1), (-1, 1, -1), (-1, -1, 1), (-1, -1, -1)  # Full diagonal neighbors
 ]
 
+def heuristic(a, b, M):
+    """Euclidean distance heuristic with toroidal wrap-around."""
+    dx = min(abs(a[0] - b[0]), M - abs(a[0] - b[0]))  # Wrap around on x-axis
+    dy = min(abs(a[1] - b[1]), M - abs(a[1] - b[1]))  # Wrap around on y-axis
+    dz = min(abs(a[2] - b[2]), M - abs(a[2] - b[2]))  # Wrap around on z-axis
+    return math.sqrt(dx**2 + dy**2 + dz**2)
+
+def reconstruct_path(came_from, current):
+    """Reconstruct the path from the goal to the start."""
+    path = [current]
+    while current in came_from:
+        current = came_from[current]
+        path.append(current)
+    path.reverse()
+    return path
+
+def toroidal_wrap(x, grid_size):
+    """Handle toroidal wrap-around for 3D grid."""
+    return (x + grid_size) % grid_size
+
+# def map_joint_to_grid_indices(start_joint, goal_joint, M):
+#     # Map each joint angle to the corresponding grid index for start_joint
+#     start_indices = (angle_to_grid_index(start_joint.q1, M), 
+#                      angle_to_grid_index(start_joint.q2, M), 
+#                      angle_to_grid_index(start_joint.q3, M))
+    
+#     # Map each joint angle to the corresponding grid index for goal_joint
+#     goal_indices = (angle_to_grid_index(goal_joint.q1, M), 
+#                     angle_to_grid_index(goal_joint.q2, M), 
+#                     angle_to_grid_index(goal_joint.q3, M))
+    
+#     # Output the joint angles and corresponding grid indices
+#     print("Start joint angles (q1, q2, q3):", start_joint.q1, ",", start_joint.q2, ",", start_joint.q3)
+#     print("Start indices in grid:", start_indices)
+    
+#     print("Goal joint angles (q1, q2, q3):", goal_joint.q1, ",", goal_joint.q2, ",", goal_joint.q3)
+#     print("Goal indices in grid:", goal_indices)
+    
+#     return start_indices, goal_indices
+
+def map_joint_to_grid_indices_and_radii(start_joint, goal_joint, M):
+    # Function to map joint angles to grid indices and then convert them to corresponding radii
+
+    # Map each joint angle to the corresponding grid index for start_joint
+    start_indices = (
+        angle_to_grid_index(start_joint.q1, M), 
+        angle_to_grid_index(start_joint.q2, M), 
+        angle_to_grid_index(start_joint.q3, M)
+    )
+    
+    # Map each joint angle to the corresponding grid index for goal_joint
+    goal_indices = (
+        angle_to_grid_index(goal_joint.q1, M), 
+        angle_to_grid_index(goal_joint.q2, M), 
+        angle_to_grid_index(goal_joint.q3, M)
+    )
+    
+    # Convert grid indices to corresponding radius values (angles between 0 and pi)
+    def grid_index_to_radius(grid_index, M):
+        # Convert grid index to angle in the range [0, pi]
+        return (grid_index / (M - 1)) * np.pi
+    
+    # Convert start_indices and goal_indices to radius values
+    start_radii = (
+        grid_index_to_radius(start_indices[0], M),
+        grid_index_to_radius(start_indices[1], M),
+        grid_index_to_radius(start_indices[2], M)
+    )
+    
+    goal_radii = (
+        grid_index_to_radius(goal_indices[0], M),
+        grid_index_to_radius(goal_indices[1], M),
+        grid_index_to_radius(goal_indices[2], M)
+    )
+    
+    # Output the results: joint angles, grid indices, and corresponding radii
+    print("Start joint angles (q1, q2, q3):", start_joint.q1, ",", start_joint.q2, ",", start_joint.q3)
+    print("Start indices in grid:", start_indices)
+    print("Start radii (r1, r2, r3):", start_radii)
+    
+    print("Goal joint angles (q1, q2, q3):", goal_joint.q1, ",", goal_joint.q2, ",", goal_joint.q3)
+    print("Goal indices in grid:", goal_indices)
+    print("Goal radii (r1, r2, r3):", goal_radii)
+    
+    return start_indices, goal_indices, start_radii, goal_radii
+
+def astar_torus(grid, start, goal, M):
+    """
+    A* algorithm for pathfinding in a toroidal grid.
+    
+    Parameters:
+    - grid: The occupancy grid (M x M x M).
+    - start: The start position in grid indices (x, y, z).
+    - goal: The goal position in grid indices (x, y, z).
+    - M: The size of the grid (M x M x M).
+    
+    Returns:
+    - The path from start to goal as a list of positions, or None if no path is found.
+    """
+    # Priority queue for A* (min-heap)
+    open_list = []
+    heapq.heappush(open_list, (0, start))  # (cost, position)
+    
+    # Dictionaries to store g, f, and came_from
+    g_costs = {start: 0}  # Cost to reach each node
+    f_costs = {start: heuristic(start, goal, M)}  # f = g + h
+    came_from = {}  # To reconstruct the path
+    
+    while open_list:
+        # Pop the node with the lowest f value
+        _, current = heapq.heappop(open_list)
+        
+        # If we reached the goal, reconstruct the path
+        if current == goal:
+            path = reconstruct_path(came_from, current)
+            return path
+        
+        # Explore neighbors
+        for dx, dy, dz in MOVEMENTS:
+            neighbor = (toroidal_wrap(current[0] + dx, M),
+                       toroidal_wrap(current[1] + dy, M),
+                       toroidal_wrap(current[2] + dz, M))
+            
+            if grid[neighbor[0]][neighbor[1]][neighbor[2]] == 1:  # Skip obstacles
+                continue
+            
+            tentative_g_cost = g_costs[current] + 1  # Each move costs 1
+            
+            if neighbor not in g_costs or tentative_g_cost < g_costs[neighbor]:
+                came_from[neighbor] = current
+                g_costs[neighbor] = tentative_g_cost
+                f_costs[neighbor] = tentative_g_cost + heuristic(neighbor, goal, M)
+                heapq.heappush(open_list, (f_costs[neighbor], neighbor))
+    
+    return None  # No path found
+
+# Function to visualize the 3D A* path
+def plot_path(path):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    x_vals = [p[0] for p in path]
+    y_vals = [p[1] for p in path]
+    z_vals = [p[2] for p in path]
+    
+    ax.plot(x_vals, y_vals, z_vals, marker='o')
+    plt.show()
+
+#---------------------------------Constrain Detection--------------------------------#
+
+# ตรวจสอบว่า RRR Robot สามารถ Reach the goal ได้มั๊ย
+def is_reachable(goal_joint):
+    """
+    Checks if the inverse kinematics solution is valid.
+    - If None is returned, the goal is unreachable.
+    - If joint angles contain complex components, the goal is unreachable.
+    """
+    # Check if the goal_joint is None, meaning no solution was found
+    if goal_joint is None:
+        print("The goal is unreachable. No valid solution found.")
+        return False
+    
+    # Check if any of the joint angles are complex numbers (using sympy to check for complex components)
+    if isinstance(goal_joint.q1, sp.Basic) and not goal_joint.q1.is_real:
+        print("The goal is unreachable. Complex joint angle q1 found.")
+        return False
+    if isinstance(goal_joint.q2, sp.Basic) and not goal_joint.q2.is_real:
+        print("The goal is unreachable. Complex joint angle q2 found.")
+        return False
+    if isinstance(goal_joint.q3, sp.Basic) and not goal_joint.q3.is_real:
+        print("The goal is unreachable. Complex joint angle q3 found.")
+        return False
+
+    # If no complex components were found
+    print("The goal is reachable. Real joint angles found.")
+    return True
+
+#---------------------------------------TSP------------------------------------------#
+
+def calculate_joint_distance(path, M):
+    """
+    Calculates the total angular distance that each joint has to move along the path.
+    Assumes path is a list of tuples representing joint angles in grid indices.
+    
+    Parameters:
+    - path: A list of tuples representing joint angles at each step in the path (in grid indices).
+    - M: The size of the grid (number of discrete steps per joint angle).
+    
+    Returns:
+    - q1_dist, q2_dist, q3_dist: The total distance each joint moves along the path (in radians).
+    """
+    def angle_distance(a1, a2, M):
+        """Calculate the shortest angular distance between two grid indices."""
+        # Convert grid indices to angles
+        scale = (2 * pi) / M
+        theta1 = a1 * scale
+        theta2 = a2 * scale
+        
+        # Calculate the shortest distance (accounting for the toroidal wraparound)
+        delta_theta = (theta2 - theta1 + pi) % (2 * pi) - pi
+        return abs(delta_theta)
+    
+    # Initialize the total distances for each joint
+    q1_dist = 0
+    q2_dist = 0
+    q3_dist = 0
+    
+    # Calculate the total angular distance for each joint
+    for i in range(1, len(path)):
+        q1_dist += angle_distance(path[i-1][0], path[i][0], M)
+        q2_dist += angle_distance(path[i-1][1], path[i][1], M)
+        q3_dist += angle_distance(path[i-1][2], path[i][2], M)
+    
+    return q1_dist, q2_dist, q3_dist
+
+
+def TSP():
+    pass
+
+#------------------------------------Plot & Animation---------------------------------#
 
 def Show_plot(joint_pos, obstacles):
     # Extract joint positions
@@ -374,8 +794,9 @@ def Show_plot(joint_pos, obstacles):
 
     # Show the plot
     plt.show()
-    
 
+#------------------------------------------main----------------------------------------#
+    
 # # Chack RRR Class All Function
 # def main():
 #     RRR = RRR_Robot(l1=1, l2=1, l3=0.4, q1=0.1, q2=-0.5, q3=0.8)
@@ -407,48 +828,151 @@ def Show_plot(joint_pos, obstacles):
 #     print("Pz ", position.PE.z)
 
     
+# # Check detect_collision Function
+# def main():
+#     # ตั้งค่าหุ่นยนต์
+#     RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=-1, q2=1, q3=-0.5)
 
+#     # แสดงข้อมูลสิ่งกีดขวาง
+#     print("=" * 40)
+#     print("Generated Obstacles:")
+#     print("=" * 40)
+#     for i, obs in enumerate(obstacles, start=1):
+#         print(f"Obstacle {i}: Center=({obs[0]:.2f}, {obs[1]:.2f}, {obs[2]:.2f}), Radius={obs[3]:.2f}")
+#     print("=" * 40)
+
+#     # คำนวณ Forward Kinematics
+#     print("\nCalculating Forward Kinematics...")
+#     goal_point = RRR.Forward_Kinematics()
+#     print(f"Goal Point (End Effector Position):")
+#     print(f"Px: {float(goal_point.PE.x):.2f}, Py: {float(goal_point.PE.y):.2f}, Pz: {float(goal_point.PE.z):.2f}")
+#     print("=" * 40)
+
+#     # แปลงตำแหน่งข้อต่อเป็น 2D List
+#     joint_positions = convert_goal_point_to_2d_list(goal_point)
+#     print("\nJoint Positions (2D List):")
+#     for i, pos in enumerate(joint_positions, start=1):
+#         print(f"Joint {i}: x={float(pos[0]):.2f}, y={float(pos[1]):.2f}, z={float(pos[2]):.2f}")
+#     print("=" * 40)
+
+#     # ตรวจสอบการชน
+#     print("\nChecking for Collisions...")
+#     collision_detected = detect_collision(obstacles, joint_positions)
+#     if collision_detected:
+#         print("⚠️  Collision Detected!")
+#     else:
+#         print("✅  No Collision Detected.")
+#     print("=" * 40)
+
+#     # แสดงกราฟหุ่นยนต์และสิ่งกีดขวาง
+#     print("\nDisplaying Robot and Obstacles...")
+#     Show_plot(goal_point, obstacles)
+#     print("Visualization Complete!")
+
+# # Test the A* algorithm
+# if __name__ == "__main__":
+#     M = 100  # Grid size
+#     grid = np.zeros((M, M, M), dtype=int)  # Empty grid
+    
+#     # Add obstacles (example)
+#     grid[25][25][25] = 1
+#     grid[50][50][50] = 1
+#     grid[75][75][75] = 1
+    
+#     # Define start and goal positions in grid indices
+#     start = (10, 10, 10)
+#     goal = (90, 90, 90)
+    
+#     # Run A* algorithm
+#     path = astar_torus(grid, start, goal, M)
+#     print("Path found:", path)
+
+
+# Test jpint moving distance
+# if __name__ == "__main__":
+#     # Example path with joint angles (in grid indices)
+#     path = [(0, 10, 0), (1, 11, 1), (2, 12, 2)]
+
+#     # Calculate the distance for each joint
+#     q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
+
+#     print(f"Joint 1 distance: {q1_dist}")
+#     print(f"Joint 2 distance: {q2_dist}")
+#     print(f"Joint 3 distance: {q3_dist}")
+
+
+# # Create toroidal grid
+# def main():
+#     RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=-1, q2=1, q3=-0.5)
+#     tor_grid = get_occupancy_grid(RRR, obstacles)
+    
+#     # Save tor_grid to file
+#     save_tor_grid(tor_grid, 'tor_grid.npy')
+
+# We use this
 def main():
-    # ตั้งค่าหุ่นยนต์
-    RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=-1, q2=1, q3=-0.5)
 
-    # แสดงข้อมูลสิ่งกีดขวาง
-    print("=" * 40)
-    print("Generated Obstacles:")
-    print("=" * 40)
-    for i, obs in enumerate(obstacles, start=1):
-        print(f"Obstacle {i}: Center=({obs[0]:.2f}, {obs[1]:.2f}, {obs[2]:.2f}), Radius={obs[3]:.2f}")
-    print("=" * 40)
+    tor_grid = load_tor_grid('tor_grid.npy')    # Load Grid ที่มี Obstacle
+    #tor_grid = np.zeros((M, M, M), dtype=int)  # สร้าง Grid เปล่าแบบไม่มี Obstacle
 
-    # คำนวณ Forward Kinematics
-    print("\nCalculating Forward Kinematics...")
-    goal_point = RRR.Forward_Kinematics()
-    print(f"Goal Point (End Effector Position):")
-    print(f"Px: {float(goal_point.PE.x):.2f}, Py: {float(goal_point.PE.y):.2f}, Pz: {float(goal_point.PE.z):.2f}")
-    print("=" * 40)
+    # Case 1 สามารถหา path planning ได้
+    start_joint = Joint(1, 1, -0.5)
+    goal_point = Point(2, 1.5, 3)
 
-    # แปลงตำแหน่งข้อต่อเป็น 2D List
-    joint_positions = convert_goal_point_to_2d_list(goal_point)
-    print("\nJoint Positions (2D List):")
-    for i, pos in enumerate(joint_positions, start=1):
-        print(f"Joint {i}: x={float(pos[0]):.2f}, y={float(pos[1]):.2f}, z={float(pos[2]):.2f}")
-    print("=" * 40)
+    # Case 2 สามารถหา path planning ได้
+    # start_joint = Joint(0.2, 3, -1)
+    # goal_point = Point(-1, 2, 4)
 
-    # ตรวจสอบการชน
-    print("\nChecking for Collisions...")
-    collision_detected = detect_collision(obstacles, joint_positions)
-    if collision_detected:
-        print("⚠️  Collision Detected!")
-    else:
-        print("✅  No Collision Detected.")
-    print("=" * 40)
+    # Case 3 ไม่สามารถ Reach the goal ได้
+    # start_joint = Joint(1, 1, -0.5)
+    # goal_point = Point(3, -3, 3)
 
-    # แสดงกราฟหุ่นยนต์และสิ่งกีดขวาง
-    print("\nDisplaying Robot and Obstacles...")
-    Show_plot(goal_point, obstacles)
-    print("Visualization Complete!")
+    # Create RRR Robot
+    RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+    goal_joint = RRR.Inverse_Kinematics(goal_point) # หา goal ใน joint space
 
+    print("goal_joint: ", goal_joint.q1, goal_joint.q2, goal_joint.q3)
+
+    check_reach = is_reachable(goal_joint)
+
+    if(check_reach):
+        # หาตำแหน่งแต่ละ Joint ที่ Goal point
+        RRR.update_joint(goal_joint)
+        goal_joint_pos = RRR.Forward_Kinematics()
+        goal_joint_position = convert_goal_point_to_2d_list(goal_joint_pos)
+
+        # ตรวจสอบการชนที่ Goal point
+        print("\nChecking for Collisions...")
+        collision_detected = detect_collision(obstacles, goal_joint_position)
+
+        # แสดงกราฟหุ่นยนต์และสิ่งกีดขวาง
+        print("\nDisplaying Robot and Obstacles...")
+        Show_plot(goal_joint_pos, obstacles)
+        print("Visualization Complete!")
+
+        # กรณีที่ Goal point ไม่ชนสิ่งกีดขวาง ให้ทำการหา Path Planning ไปยัง Goal point
+        if not collision_detected:
+            # start_indices, goal_indices = map_joint_to_grid_indices_and_radii(start_joint, goal_joint, M)
+            start_indices, goal_indices = map_joint_to_grid_indices(start_joint, goal_joint, M)
+
+
+            # Run A* to find the path
+            path = astar_torus(tor_grid, start_indices, goal_indices, M)
+
+            if path:
+                print("Path found!")
+                print(path)
+                plot_path(path)
+                q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
+
+                print(f"Joint 1 distance: {q1_dist}")
+                print(f"Joint 2 distance: {q2_dist}")
+                print(f"Joint 3 distance: {q3_dist}")
+
+            else:
+                print("No path found!")
 
 
 if __name__ == '__main__':
     main()
+
