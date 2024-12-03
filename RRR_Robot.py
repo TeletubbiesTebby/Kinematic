@@ -350,25 +350,71 @@ def toroidal_wrap(x, grid_size):
     """Handle toroidal wrap-around for 3D grid."""
     return (x + grid_size) % grid_size
 
-def map_joint_to_grid_indices(start_joint, goal_joint, M):
+# def map_joint_to_grid_indices(start_joint, goal_joint, M):
+#     # Map each joint angle to the corresponding grid index for start_joint
+#     start_indices = (angle_to_grid_index(start_joint.q1, M), 
+#                      angle_to_grid_index(start_joint.q2, M), 
+#                      angle_to_grid_index(start_joint.q3, M))
+    
+#     # Map each joint angle to the corresponding grid index for goal_joint
+#     goal_indices = (angle_to_grid_index(goal_joint.q1, M), 
+#                     angle_to_grid_index(goal_joint.q2, M), 
+#                     angle_to_grid_index(goal_joint.q3, M))
+    
+#     # Output the joint angles and corresponding grid indices
+#     print("Start joint angles (q1, q2, q3):", start_joint.q1, ",", start_joint.q2, ",", start_joint.q3)
+#     print("Start indices in grid:", start_indices)
+    
+#     print("Goal joint angles (q1, q2, q3):", goal_joint.q1, ",", goal_joint.q2, ",", goal_joint.q3)
+#     print("Goal indices in grid:", goal_indices)
+    
+#     return start_indices, goal_indices
+
+def map_joint_to_grid_indices_and_radii(start_joint, goal_joint, M):
+    # Function to map joint angles to grid indices and then convert them to corresponding radii
+
     # Map each joint angle to the corresponding grid index for start_joint
-    start_indices = (angle_to_grid_index(start_joint.q1, M), 
-                     angle_to_grid_index(start_joint.q2, M), 
-                     angle_to_grid_index(start_joint.q3, M))
+    start_indices = (
+        angle_to_grid_index(start_joint.q1, M), 
+        angle_to_grid_index(start_joint.q2, M), 
+        angle_to_grid_index(start_joint.q3, M)
+    )
     
     # Map each joint angle to the corresponding grid index for goal_joint
-    goal_indices = (angle_to_grid_index(goal_joint.q1, M), 
-                    angle_to_grid_index(goal_joint.q2, M), 
-                    angle_to_grid_index(goal_joint.q3, M))
+    goal_indices = (
+        angle_to_grid_index(goal_joint.q1, M), 
+        angle_to_grid_index(goal_joint.q2, M), 
+        angle_to_grid_index(goal_joint.q3, M)
+    )
     
-    # Output the joint angles and corresponding grid indices
+    # Convert grid indices to corresponding radius values (angles between 0 and pi)
+    def grid_index_to_radius(grid_index, M):
+        # Convert grid index to angle in the range [0, pi]
+        return (grid_index / (M - 1)) * np.pi
+    
+    # Convert start_indices and goal_indices to radius values
+    start_radii = (
+        grid_index_to_radius(start_indices[0], M),
+        grid_index_to_radius(start_indices[1], M),
+        grid_index_to_radius(start_indices[2], M)
+    )
+    
+    goal_radii = (
+        grid_index_to_radius(goal_indices[0], M),
+        grid_index_to_radius(goal_indices[1], M),
+        grid_index_to_radius(goal_indices[2], M)
+    )
+    
+    # Output the results: joint angles, grid indices, and corresponding radii
     print("Start joint angles (q1, q2, q3):", start_joint.q1, ",", start_joint.q2, ",", start_joint.q3)
     print("Start indices in grid:", start_indices)
+    print("Start radii (r1, r2, r3):", start_radii)
     
     print("Goal joint angles (q1, q2, q3):", goal_joint.q1, ",", goal_joint.q2, ",", goal_joint.q3)
     print("Goal indices in grid:", goal_indices)
+    print("Goal radii (r1, r2, r3):", goal_radii)
     
-    return start_indices, goal_indices
+    return start_indices, goal_indices, start_radii, goal_radii
 
 def astar_torus(grid, start, goal, M):
     """
@@ -711,7 +757,9 @@ def main():
 
         # กรณีที่ Goal point ไม่ชนสิ่งกีดขวาง ให้ทำการหา Path Planning ไปยัง Goal point
         if not collision_detected:
+            # start_indices, goal_indices = map_joint_to_grid_indices_and_radii(start_joint, goal_joint, M)
             start_indices, goal_indices = map_joint_to_grid_indices(start_joint, goal_joint, M)
+
 
             # Run A* to find the path
             path = astar_torus(tor_grid, start_indices, goal_indices, M)
