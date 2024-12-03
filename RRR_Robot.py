@@ -6,6 +6,8 @@ from math import pi
 import numpy as np
 import heapq
 import math
+from matplotlib.animation import FuncAnimation
+
 
 #---------------------------------Simulation parameters----------------------------------#
 M = 100
@@ -601,13 +603,13 @@ def map_joint_to_grid_indices_and_radii(start_joint, goal_joint, M):
     )
     
     # Output the results: joint angles, grid indices, and corresponding radii
-    print("Start joint angles (q1, q2, q3):", start_joint.q1, ",", start_joint.q2, ",", start_joint.q3)
-    print("Start indices in grid:", start_indices)
-    print("Start radii (r1, r2, r3):", start_radii)
+    # print("Start joint angles (q1, q2, q3):", start_joint.q1, ",", start_joint.q2, ",", start_joint.q3)
+    # print("Start indices in grid:", start_indices)
+    # print("Start radii (r1, r2, r3):", start_radii)
     
-    print("Goal joint angles (q1, q2, q3):", goal_joint.q1, ",", goal_joint.q2, ",", goal_joint.q3)
-    print("Goal indices in grid:", goal_indices)
-    print("Goal radii (r1, r2, r3):", goal_radii)
+    # print("Goal joint angles (q1, q2, q3):", goal_joint.q1, ",", goal_joint.q2, ",", goal_joint.q3)
+    # print("Goal indices in grid:", goal_indices)
+    # print("Goal radii (r1, r2, r3):", goal_radii)
     
     return start_indices, goal_indices, start_radii, goal_radii
 
@@ -794,6 +796,8 @@ def Show_plot(joint_pos, obstacles):
 
     # Show the plot
     plt.show()
+    
+# def Animation():
 
 #------------------------------------------main----------------------------------------#
     
@@ -909,7 +913,118 @@ def Show_plot(joint_pos, obstacles):
 #     # Save tor_grid to file
 #     save_tor_grid(tor_grid, 'tor_grid.npy')
 
-# We use this
+def convert_path_to_radian(path):
+    """
+    Convert a list of tuples representing joint angles from range (0-99) to (0-pi) in radians.
+
+    Parameters:
+    - path: List of tuples [(q1, q2, q3), ...]
+
+    Returns:
+    - radian_path: List of Points [(x, y, z), ...] in radians
+    """
+    radian_path = []
+    scale_factor = np.pi / 99  # Conversion factor from 0-99 to 0-pi
+
+    for joint_angles in path:
+        q1, q2, q3 = joint_angles
+        radian_path.append(Joint(
+            q1 * scale_factor,  # แปลง q1 เป็น radians
+            q2 * scale_factor,  # แปลง q2 เป็น radians
+            q3 * scale_factor   # แปลง q3 เป็น radians
+        ))
+
+    return radian_path
+
+
+
+# import matplotlib.pyplot as plt
+# from matplotlib.animation import FuncAnimation
+
+# def animate_path(path, obstacles, RRR, start_joint):
+#     # เตรียมข้อมูล
+#     goal_points = convert_path_to_radian(path)  # goal_points เป็น List ของ Point object
+#     print('goal_point',goal_points)
+#     RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+#     # goal_joint = RRR.Inverse_Kinematics(goal_point)  # คำนวณ joint angles
+#     # คำนวณตำแหน่งหุ่นยนต์ในแต่ละจุดของ path
+#     # joint_positions = []
+#     for goal_point in goal_points:
+#         RRR.update_joint(goal_point)  # อัปเดตตำแหน่งหุ่นยนต์
+#         goal_joint_pos = RRR.Forward_Kinematics()  # คำนวณตำแหน่งจุดของหุ่นยนต์
+#         # joint_positions.append(goal_joint_pos)
+#         Show_plot(goal_joint_pos, obstacles)
+
+
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import numpy as np
+from math import pi
+
+def animate_path(path, obstacles, RRR, start_joint):
+    # Prepare data
+    goal_points = convert_path_to_radian(path)  # goal_points is a list of Point objects
+    # print('goal_points:', goal_points)
+    # goal_points = Joint(path_convert)
+    RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+
+    # Create a figure and 3D axes
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Initialize the plot
+    def init():
+        ax.clear()
+        ax.set_xlim([-3, 3])
+        ax.set_ylim([-3, 3])
+        ax.set_zlim([0, 6])
+        ax.set_xlabel('X-axis')
+        ax.set_ylabel('Y-axis')
+        ax.set_zlabel('Z-axis')
+        for obstacle in obstacles:
+            u = np.linspace(0, 2 * pi, 100)
+            v = np.linspace(0, pi, 100)
+            x = obstacle[3] * np.outer(np.cos(u), np.sin(v)) + obstacle[0]
+            y = obstacle[3] * np.outer(np.sin(u), np.sin(v)) + obstacle[1]
+            z = obstacle[3] * np.outer(np.ones(np.size(u)), np.cos(v)) + obstacle[2]
+            ax.plot_surface(x, y, z, color='r', alpha=0.5)  # Semi-transparent obstacle
+
+    # Update function for animation
+    def update(frame):
+        goal_point = goal_points[frame]
+        RRR.update_joint(goal_point)  # Update robot position
+        joint_pos = RRR.Forward_Kinematics()  # Get joint positions
+
+        # Extract joint positions
+        p1 = [float(joint_pos.P1.x), float(joint_pos.P1.y), float(joint_pos.P1.z)]
+        p2 = [float(joint_pos.P2.x), float(joint_pos.P2.y), float(joint_pos.P2.z)]
+        p3 = [float(joint_pos.P3.x), float(joint_pos.P3.y), float(joint_pos.P3.z)]
+        pE = [float(joint_pos.PE.x), float(joint_pos.PE.y), float(joint_pos.PE.z)]
+
+        # Extract coordinates for links
+        x_coords = [p1[0], p2[0], p3[0], pE[0]]
+        y_coords = [p1[1], p2[1], p3[1], pE[1]]
+        z_coords = [p1[2], p2[2], p3[2], pE[2]]
+
+        # Clear and replot
+        ax.clear()
+        init()
+        ax.scatter(*p1, color='red', s=100, label='Base (P1)')
+        ax.scatter(*p2, color='blue', s=100, label='Joint 1 (P2)')
+        ax.scatter(*p3, color='green', s=100, label='Joint 2 (P3)')
+        ax.scatter(*pE, color='purple', s=100, label='End Effector (PE)')
+        ax.plot(x_coords, y_coords, z_coords, color='black', label='Robot Links')
+        ax.legend()
+
+    # Create the animation
+    ani = FuncAnimation(fig, update, frames=len(goal_points), init_func=init, repeat=False)
+
+    # Show the animation
+    plt.show()
+
+
+
+
 def main():
 
     tor_grid = load_tor_grid('tor_grid.npy')    # Load Grid ที่มี Obstacle
@@ -930,7 +1045,7 @@ def main():
     # Create RRR Robot
     RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
     goal_joint = RRR.Inverse_Kinematics(goal_point) # หา goal ใน joint space
-
+    print('goal_joint NING TIK',goal_joint)
     print("goal_joint: ", goal_joint.q1, goal_joint.q2, goal_joint.q3)
 
     check_reach = is_reachable(goal_joint)
@@ -953,21 +1068,25 @@ def main():
         # กรณีที่ Goal point ไม่ชนสิ่งกีดขวาง ให้ทำการหา Path Planning ไปยัง Goal point
         if not collision_detected:
             # start_indices, goal_indices = map_joint_to_grid_indices_and_radii(start_joint, goal_joint, M)
-            start_indices, goal_indices = map_joint_to_grid_indices(start_joint, goal_joint, M)
-
+            start_indices, goal_indices, start_radii, goal_radii = map_joint_to_grid_indices_and_radii(start_joint, goal_joint, M)
+            print('start_radii, goal_radii',start_radii, goal_radii)
 
             # Run A* to find the path
             path = astar_torus(tor_grid, start_indices, goal_indices, M)
+            
 
             if path:
                 print("Path found!")
                 print(path)
+                
                 plot_path(path)
                 q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
 
                 print(f"Joint 1 distance: {q1_dist}")
                 print(f"Joint 2 distance: {q2_dist}")
                 print(f"Joint 3 distance: {q3_dist}")
+                
+                animate_path(path, obstacles, RRR , start_joint )
 
             else:
                 print("No path found!")
@@ -975,4 +1094,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
+    
+
 
