@@ -7,6 +7,8 @@ import numpy as np
 import heapq
 import math
 from matplotlib.animation import FuncAnimation
+from itertools import permutations
+
 
 #---------------------------------Simulation parameters----------------------------------#
 M = 100
@@ -516,9 +518,34 @@ def calculate_joint_distance(path, M):
     
     return q1_dist, q2_dist, q3_dist
 
+def TSP(RRR, start_joint, goal_points):
+    # เก็บระยะทางทั้งหมดที่ใช้ในการคำนวณการหมุน joint
+    best_sequence = None
+    min_joint_change = float('inf')  # เริ่มต้นด้วยค่ามากสุด
 
-def TSP(RRR, start_joint, goal_point):
-    pass
+    # หาทุก permutation ของ goal points เพื่อเปรียบเทียบการเดินทางทุกเส้นทาง
+    for seq in permutations(goal_points):
+        current_joint = start_joint  # เริ่มต้นที่ตำแหน่งเริ่มต้น
+
+        total_joint_change = 0  # เก็บการหมุน joint ทั้งหมด
+
+        # เปรียบเทียบเส้นทางและคำนวณการหมุน joint ในแต่ละ leg
+        for point in seq:
+            q1_sol, q2_sol, q3_sol = RRR.Inverse_Kinematics(point)
+
+            # คำนวณการเปลี่ยนแปลงของ joint (การหมุน)
+            joint_change = abs(current_joint.q1 - q1_sol[0]) + abs(current_joint.q2 - q2_sol[0]) + abs(current_joint.q3 - q3_sol[0])
+            total_joint_change += joint_change
+
+            # อัปเดต joint ปัจจุบัน
+            current_joint = Joint(q1=q1_sol[0], q2=q2_sol[0], q3=q3_sol[0])
+
+        # ตรวจสอบว่าเส้นทางนี้มีการหมุน joint น้อยที่สุดหรือไม่
+        if total_joint_change < min_joint_change:
+            min_joint_change = total_joint_change
+            best_sequence = seq
+
+    return best_sequence, min_joint_change
 
 #------------------------------------Plot & Animation---------------------------------#
 
