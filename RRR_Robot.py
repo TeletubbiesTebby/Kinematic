@@ -45,6 +45,17 @@ class Joint:
     def get_angles(self):
         return [self.q1, self.q2, self.q3]
     
+
+
+
+class P2P_Path:
+    def __init__(self, i, j, start, path, total_dist):
+        self.i = i
+        self.j = j
+        self.start = start
+        self.path = path
+        self.total_dist = total_dist
+    
 #---------------------------Toroidal Grid & Obstacle detection-----------------------------#
 
 def generate_random_obstacles(num_obstacles=3, max_radius=0.5, x_limit=(-3, 3), y_limit=(-3, 3), z_limit=(0, 6), min_distance=0.1):
@@ -518,34 +529,146 @@ def calculate_joint_distance(path, M):
     
     return q1_dist, q2_dist, q3_dist
 
-def TSP(RRR, start_joint, goal_points):
-    # เก็บระยะทางทั้งหมดที่ใช้ในการคำนวณการหมุน joint
-    best_sequence = None
-    min_joint_change = float('inf')  # เริ่มต้นด้วยค่ามากสุด
+# def TSP(RRR, start_joint, goal_points):
+#     # เก็บระยะทางทั้งหมดที่ใช้ในการคำนวณการหมุน joint
+#     best_sequence = None
+#     min_joint_change = float('inf')  # เริ่มต้นด้วยค่ามากสุด
 
-    # หาทุก permutation ของ goal points เพื่อเปรียบเทียบการเดินทางทุกเส้นทาง
-    for seq in permutations(goal_points):
-        current_joint = start_joint  # เริ่มต้นที่ตำแหน่งเริ่มต้น
+#     # หาทุก permutation ของ goal points เพื่อเปรียบเทียบการเดินทางทุกเส้นทาง
+#     for seq in permutations(goal_points):
+#         current_joint = start_joint  # เริ่มต้นที่ตำแหน่งเริ่มต้น
 
-        total_joint_change = 0  # เก็บการหมุน joint ทั้งหมด
+#         total_joint_change = 0  # เก็บการหมุน joint ทั้งหมด
 
-        # เปรียบเทียบเส้นทางและคำนวณการหมุน joint ในแต่ละ leg
-        for point in seq:
-            q1_sol, q2_sol, q3_sol = RRR.Inverse_Kinematics(point)
+#         # เปรียบเทียบเส้นทางและคำนวณการหมุน joint ในแต่ละ leg
+#         for point in seq:
+#             q1_sol, q2_sol, q3_sol = RRR.Inverse_Kinematics(point)
 
-            # คำนวณการเปลี่ยนแปลงของ joint (การหมุน)
-            joint_change = abs(current_joint.q1 - q1_sol[0]) + abs(current_joint.q2 - q2_sol[0]) + abs(current_joint.q3 - q3_sol[0])
-            total_joint_change += joint_change
+#             # คำนวณการเปลี่ยนแปลงของ joint (การหมุน)
+#             joint_change = abs(current_joint.q1 - q1_sol[0]) + abs(current_joint.q2 - q2_sol[0]) + abs(current_joint.q3 - q3_sol[0])
+#             total_joint_change += joint_change
 
-            # อัปเดต joint ปัจจุบัน
-            current_joint = Joint(q1=q1_sol[0], q2=q2_sol[0], q3=q3_sol[0])
+#             # อัปเดต joint ปัจจุบัน
+#             current_joint = Joint(q1=q1_sol[0], q2=q2_sol[0], q3=q3_sol[0])
 
-        # ตรวจสอบว่าเส้นทางนี้มีการหมุน joint น้อยที่สุดหรือไม่
-        if total_joint_change < min_joint_change:
-            min_joint_change = total_joint_change
-            best_sequence = seq
+#         # ตรวจสอบว่าเส้นทางนี้มีการหมุน joint น้อยที่สุดหรือไม่
+#         if total_joint_change < min_joint_change:
+#             min_joint_change = total_joint_change
+#             best_sequence = seq
 
-    return best_sequence, min_joint_change
+#     return best_sequence, min_joint_change
+
+def TSP(RRR, start_joint, goal_points, tor_grid, obstacles):
+    posible_paths = []
+
+    num_point = len(goal_points)
+
+    goal_joints = []
+    for goal in goal_points:
+        goal_joint = RRR.Inverse_Kinematics(goal)
+        goal_joints.append(goal_joint)
+
+        # check ว่า goal point อยู่นอกขอบเขตของหุ่นยนต์มั๊ย
+        check_reach = is_reachable(goal_joint)
+        if not check_reach:
+            print("!!! Goal Point ", goal, " cannot reach !!!")
+            return -1, -1
+        
+        # check ว่า goal point ชนสิ่งกีดขวางมั๊ย
+        RRR.update_joint(goal_joint)
+        goal_joint_pos = RRR.Forward_Kinematics()
+        goal_joint_position = convert_goal_point_to_2d_list(goal_joint_pos)
+        print("\nChecking for Collisions...")
+        collision_detected = detect_collision(obstacles, goal_joint_position)
+        if collision_detected:
+            print("!!! Goal Point ", goal, " Collisions with obstacle !!!")
+            return -1, -1
+
+    for i in range(-1, num_point-1):
+        for j in range(i+1, num_point):
+            if i == -1:
+                start = start_joint
+                goal = goal_joints[j]
+            else:
+                start = goal_joints[i]
+                goal = goal_joints[j]
+
+            start_indices, goal_indices = map_joint_to_grid_indices(start, goal, M)
+
+            # Run A* to find the path
+            path = astar_torus(tor_grid, start_indices, goal_indices, M)
+            
+            if path:
+                q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
+
+                total_dist = q1_dist + q2_dist + q3_dist
+
+                posible_paths.append(P2P_Path(i, j, start, path, total_dist))
+
+            else:
+                print("!!! Goal Point ", goal, " No path found !!!")
+                return -1, -1
+            
+    if(num_point == 1):
+        sequence = [[0, -1, 0]]
+
+    elif(num_point == 2):
+        # TSP (Brute Force)
+        min_dist = 99999
+
+        # start->goal1->goal2  
+        dist = posible_paths[0].total_dist + posible_paths[2].total_dist    
+        if dist < min_dist: 
+            min_dist = dist
+            sequence = [[0, -1, 0], [2, 0, 1]] # [posible_path_index, i, j]
+
+        # start->goal2->goal1
+        dist = posible_paths[1].total_dist + posible_paths[2].total_dist
+        if dist < min_dist: 
+            min_dist = dist
+            sequence = [[1, -1, 1], [2, 1, 0]]
+
+    elif(num_point == 3):
+        # TSP (Brute Force)
+        min_dist = 99999
+
+        # start->goal1->goal2->goal3
+        dist = posible_paths[0].total_dist + posible_paths[3].total_dist + posible_paths[5].total_dist       
+        if dist < min_dist: 
+            min_dist = dist
+            sequence = [[0, -1, 0], [3, 0, 1], [5, 1, 2]] # [posible_path_index, i, j]
+
+        # start->goal1->goal3->goal2
+        dist = posible_paths[0].total_dist + posible_paths[4].total_dist + posible_paths[5].total_dist       
+        if dist < min_dist: 
+            min_dist = dist
+            sequence = [[0, -1, 0], [4, 0, 2], [5, 2, 1]] # [posible_path_index, i, j]
+        
+        # start->goal2->goal1->goal3
+        dist = posible_paths[1].total_dist + posible_paths[3].total_dist + posible_paths[4].total_dist       
+        if dist < min_dist: 
+            min_dist = dist
+            sequence = [[1, -1, 1], [3, 1, 0], [4, 0, 2]] # [posible_path_index, i, j]
+
+        # start->goal2->goal3->goal1
+        dist = posible_paths[1].total_dist + posible_paths[5].total_dist + posible_paths[4].total_dist       
+        if dist < min_dist: 
+            min_dist = dist
+            sequence = [[1, -1, 1], [5, 1, 2], [4, 2, 0]] # [posible_path_index, i, j]
+
+        # start->goal3->goal1->goal2
+        dist = posible_paths[2].total_dist + posible_paths[4].total_dist + posible_paths[3].total_dist       
+        if dist < min_dist: 
+            min_dist = dist
+            sequence = [[2, -1, 2], [4, 2, 0], [3, 0, 1]] # [posible_path_index, i, j]
+
+        # start->goal3->goal2->goal1
+        dist = posible_paths[2].total_dist + posible_paths[5].total_dist + posible_paths[3].total_dist       
+        if dist < min_dist: 
+            min_dist = dist
+            sequence = [[2, -1, 2], [5, 2, 1], [3, 1, 0]] # [posible_path_index, i, j]
+
+    return posible_paths, sequence
 
 #------------------------------------Plot & Animation---------------------------------#
 
@@ -798,75 +921,79 @@ def animate_path(path, obstacles, RRR, start_joint):
 #     save_tor_grid(tor_grid, 'tor_grid.npy')
 
 
-# Base Main
-def main():
+# Base Main - Check A* and Animation
+# def main():
 
-    tor_grid = load_tor_grid('tor_grid.npy')    # Load Grid ที่มี Obstacle
-    #tor_grid = np.zeros((M, M, M), dtype=int)  # สร้าง Grid เปล่าแบบไม่มี Obstacle
+#     tor_grid = load_tor_grid('tor_grid.npy')    # Load Grid ที่มี Obstacle
+#     #tor_grid = np.zeros((M, M, M), dtype=int)  # สร้าง Grid เปล่าแบบไม่มี Obstacle
 
-    # Case 1 สามารถหา path planning ได้
-    start_joint = Joint(1, 1, -0.5)
-    goal_point = Point(2, 1.5, 3)
+#     # Case 1 สามารถหา path planning ได้
+#     # start_joint = Joint(1, 1, -0.5)
+#     # goal_point = Point(2, 1.5, 3)
 
-    # Case 2 สามารถหา path planning ได้
-    # start_joint = Joint(0.2, 3, -1)
-    # goal_point = Point(-1, 2, 4)
+#     # Case 2 สามารถหา path planning ได้
+#     # start_joint = Joint(0.2, 3, -1)
+#     # goal_point = Point(-1, 2, 4)
 
-    # Case 3 ไม่สามารถ Reach the goal ได้
-    # start_joint = Joint(1, 1, -0.5)
-    # goal_point = Point(3, -3, 3)
+#     # Case 3 สามารถหา path planning ได้
+#     start_joint = Joint(1, 1, -0.5)
+#     goal_point = Point(-1, 2, 3)
 
-    # Create RRR Robot
-    RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
-    goal_joint = RRR.Inverse_Kinematics(goal_point) # หา goal ใน joint space
-    print('goal_joint NING TIK',goal_joint)
-    print("goal_joint: ", goal_joint.q1, goal_joint.q2, goal_joint.q3)
+#     # Case 4 ไม่สามารถ Reach the goal ได้
+#     # start_joint = Joint(1, 1, -0.5)
+#     # goal_point = Point(3, -3, 3)
 
-    check_reach = is_reachable(goal_joint)
+#     # Create RRR Robot
+#     RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+#     goal_joint = RRR.Inverse_Kinematics(goal_point) # หา goal ใน joint space
+#     print('goal_joint NING TIK',goal_joint)
+#     print("goal_joint: ", goal_joint.q1, goal_joint.q2, goal_joint.q3)
 
-    if(check_reach):
-        # หาตำแหน่งแต่ละ Joint ที่ Goal point
-        RRR.update_joint(goal_joint)
-        goal_joint_pos = RRR.Forward_Kinematics()
-        goal_joint_position = convert_goal_point_to_2d_list(goal_joint_pos)
+#     check_reach = is_reachable(goal_joint)
 
-        # ตรวจสอบการชนที่ Goal point
-        print("\nChecking for Collisions...")
-        collision_detected = detect_collision(obstacles, goal_joint_position)
+#     if(check_reach):
+#         # หาตำแหน่งแต่ละ Joint ที่ Goal point
+#         RRR.update_joint(goal_joint)
+#         goal_joint_pos = RRR.Forward_Kinematics()
+#         goal_joint_position = convert_goal_point_to_2d_list(goal_joint_pos)
 
-        # แสดงกราฟหุ่นยนต์และสิ่งกีดขวาง
-        print("\nDisplaying Robot and Obstacles...")
-        Show_plot(goal_joint_pos, obstacles)
-        print("Visualization Complete!")
+#         # ตรวจสอบการชนที่ Goal point
+#         print("\nChecking for Collisions...")
+#         collision_detected = detect_collision(obstacles, goal_joint_position)
 
-        # กรณีที่ Goal point ไม่ชนสิ่งกีดขวาง ให้ทำการหา Path Planning ไปยัง Goal point
-        if not collision_detected:
+#         # แสดงกราฟหุ่นยนต์และสิ่งกีดขวาง
+#         print("\nDisplaying Robot and Obstacles...")
+#         Show_plot(goal_joint_pos, obstacles)
+#         print("Visualization Complete!")
 
-            start_indices, goal_indices = map_joint_to_grid_indices(start_joint, goal_joint, M)
+#         # กรณีที่ Goal point ไม่ชนสิ่งกีดขวาง ให้ทำการหา Path Planning ไปยัง Goal point
+#         if not collision_detected:
 
-            # Run A* to find the path
-            path = astar_torus(tor_grid, start_indices, goal_indices, M)
+#             start_indices, goal_indices = map_joint_to_grid_indices(start_joint, goal_joint, M)
+
+#             # Run A* to find the path
+#             path = astar_torus(tor_grid, start_indices, goal_indices, M)
             
-            if path:
-                print("Path found!")
-                print(path)
+#             if path:
+#                 print("Path found!")
+#                 print(path)
                 
-                plot_path(path)
-                q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
+#                 plot_path(path)
+#                 q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
 
-                print(f"Joint 1 distance: {q1_dist}")
-                print(f"Joint 2 distance: {q2_dist}")
-                print(f"Joint 3 distance: {q3_dist}")
+#                 print(f"Joint 1 distance: {q1_dist}")
+#                 print(f"Joint 2 distance: {q2_dist}")
+#                 print(f"Joint 3 distance: {q3_dist}")
                 
-                animate_path(path, obstacles, RRR , start_joint)
+#                 animate_path(path, obstacles, RRR , start_joint)
 
-                check_goal = convert_path_to_radian([path[-1]])
-                print("q1_goal_check", check_goal[0].q1)
-                print("q2_goal_check", check_goal[0].q2)
-                print("q3_goal_check", check_goal[0].q3)
+#                 check_goal = convert_path_to_radian([path[-1]])
+#                 print("q1_goal_check", check_goal[0].q1)
+#                 print("q2_goal_check", check_goal[0].q2)
+#                 print("q3_goal_check", check_goal[0].q3)
 
-            else:
-                print("No path found!")
+#             else:
+#                 print("No path found!")
 
 
 
@@ -878,13 +1005,28 @@ def main():
     goal_point = []
     goal_point.append(Point(2, 1.5, 3))
     goal_point.append(Point(-1, 2, 4))
+    goal_point.append(Point(-1, 2, 3))
 
     RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
 
-    seqence = TSP(RRR, start_joint, goal_point)
+    posible_paths, seqence = TSP(RRR, start_joint, goal_point, tor_grid, obstacles)
 
-    
+    if posible_paths != -1:
+        for p in posible_paths:
+            print("---------------------------------------------------------")
+            print("i=", p.i, " j=", p.j, " start=", p.start.q1, ", ", p.start.q2, ", ", p.start.q3 , " path=", p.path, " total_dist=", p.total_dist)
 
+        print("**** Optimal Moving Sequence ****")
+        for s in seqence:
+            if(s[1] == -1):
+                print("Start ->", end=" ")
+            else:
+                print("Goal ", s[1]+1, " ->", end=" ")
+            print("Goal ", s[2]+1)
+
+            if s[1] > s[2]:
+                posible_paths[s[0]].path.reverse()
+            animate_path(posible_paths[s[0]].path, obstacles, RRR , posible_paths[s[0]].start)
 
 
 if __name__ == '__main__':
