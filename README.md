@@ -255,22 +255,28 @@ q3_sol : 1.18639955229926
 ![image](https://github.com/user-attachments/assets/071704e5-4947-4824-85b4-e33a8555df26)
 
 ## 3D Occupancy Grid (Toroidal Grid)
-ทำการสร้าง 3D Occupancy Grid ซึ่งเป็น Grid ใน 3 มิติ ขนาด NxNxN โดยที่ N คือแทนขนาดของมุมใน Joint space เทียบเท่าค่า -pi ถึง pi และค่าในแต่ละช่องของ Grid แทนสถานะการชน (1) หรือไม่ชนสิ่งกีดขวาง (0) เมื่อกำหนดค่าตำแหน่งเชิงมุมของทั้ง 3 joint (q1, q2, q3) โดยมีขั้นตอนการสร้าง 3D Occupancy Grid คือ
-- กำหนด N แทนขนาดของมุมใน Joint space เทียบเท่าค่า -pi ถึง pi
-- สร้าง 3D Occupancy Grid ขนาด NxNxN
+ทำการสร้าง 3D Occupancy Grid ซึ่งเป็น Grid ใน 3 มิติ ขนาด MxMxM โดยกำหนดให้ M = 100 ให้ M แทนขนาดของมุมใน Joint space เทียบเท่าค่า 0 ถึง 2*pi และค่าในแต่ละช่องของ Grid แทนสถานะการชน (1) หรือไม่ชนสิ่งกีดขวาง (0) เมื่อกำหนดค่าตำแหน่งเชิงมุมของทั้ง 3 joint (q1, q2, q3) โดยมีขั้นตอนการสร้าง 3D Occupancy Grid คือ
+- กำหนด N แทนขนาดของมุมใน Joint space เทียบเท่าค่า 0 ถึง 2*pi
+- สร้าง 3D Occupancy Grid ขนาด MxMxM
 - วนลูปใน Grid เพื่อทำการ Fill ค่า โดยทำการเช็คว่าเมื่อค่าตำแหน่งเชิงมุมของทั้ง 3 joint (q1, q2, q3) เป็นค่าต่างๆ ทุกส่วนของ	หุ่นยนต์ชนสิ่งกีดขวางหรือไม่ ถ้าไม่ทำการ Fill 0 ลง Grid ช่องนั้นๆ แต่ถ้าชนสิ่งกีดขวาง ทำการ Fill 1 ลง Grid ช่องนั้นๆ โปรแกรมจะ	ทำงานวนลูปไปเรื่อยๆ จนกระทั่ง Fill ค่าครบทุกช่องของ Grid
 - Return 3D Occupancy Grid
 
-## A* in Joint space
-ใช้ A* Algorithm ใน Joint Space เพื่อหาเส้นทางที่สั้นที่สุดเชิงมุม โดยมี Input สำหรับการทำ A* Search คือ 3D Occupancy Grid และตำแหน่ง Goal points ใน Joint space (ที่ได้จาก Inverse Kinematic) โดยระบบจะทำ A* Search สำหรับทุกคู่ Sequence ของการเคลื่อนที่ เช่น ถ้ามี 3 Goal points จะทำ A* search ใน 6 กรณี ดังนี้
-- Start point -> Goal point 1
-- Start point -> Goal point 2
-- Start point -> Goal point 3
-- Goal point 1 -> Goal point 2
-- Goal point 1 -> Goal point 3
-- Goal point 2 -> Goal point 3
+#### code สำหรับสร้าง และบันทึก 3D Occupancy Grid (Toroidal Grid)
+```python
+# Create toroidal grid
+def main():
+    RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=-1, q2=1, q3=-0.5)
+    tor_grid = get_occupancy_grid(RRR, obstacles)
+    
+    # Save tor_grid to file
+    save_tor_grid(tor_grid, 'tor_grid.npy')
+```
 
-โดยการค้นหา Path Planning สำหรับแต่ละคู่ของ node ด้วย A* algorithm มีหลักการทำงาน ดังนี้
+## A* Function (in Joint space)
+ใช้ A* Algorithm ใน Joint Space เพื่อหาเส้นทางที่สั้นที่สุดเชิงมุม หรือ path planning 
+โดยมี Input สำหรับการทำ A* Search คือ 3D Occupancy Grid, ตำแหหน่ง start point และตำแหน่ง Goal points ใน Joint space (ที่ได้จาก Inverse Kinematic) 
+
+โดย Function นี้จะทำการค้นหา Path Planning ด้วย A* algorithm มีหลักการทำงาน ดังนี้
 
 เริ่มจากการกำหนด Init Joint position และ Goal Joint position
 - กำหนด Init Joint position เป็น Parent node
@@ -293,6 +299,13 @@ q3_sol : 1.18639955229926
 
 #### For use
 ```python
+tor_grid = load_tor_grid('tor_grid.npy')
+start_joint = Joint(1, 1, -0.5)
+goal_point = Point(2, 1.5, 3)
+
+RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+goal_joint = RRR.Inverse_Kinematics(goal_point) # หา goal ใน joint space
+
 path = astar_torus(tor_grid, start_indices, goal_indices, M)
 ```
 #### Result
@@ -306,19 +319,48 @@ path = [(10, 97, 18), (11, 96, 19), (12, 96, 20), (13, 96, 21),
 ```
 
 ## Traveling Salesman Problem (TSP)
+
 ใช้สำหรับการแก้ปัญหาการจัดเรียงลำดับ (Sequence) การเคลื่อนที่ของหุ่นยนต์ Starting point ไปยัง Goal point1, Goal point2 และ Goal point3 	เพื่อให้ได้ Sequence การเคลื่อนที่ของหุ่นยนต์ว่าควรเคลื่อนไปยัง Goal point ใดก่อนและหลัง ให้มีระยะทางเชิงมุมในการหมุนของ Joint น้อยที่สุด สำหรับประหยัดพลังงานและเวลาที่ใช้
 
 โดยการทำ TSP Slover ในปัญหานี้ ระบบมีขั้นตอนการทำงาน ดังนี้
-- สร้าง Graph สำหรับทำ TSP Slover เพื่อคนหาเส้นทางที่สั้นที่สุด โดยกำหนดให้ Starting Point, Goal point1, Goal point2 และ Goal point3 เป็น Node ของกราฟ และกำหนดให้ Weight ของกราฟ คือ ระยะทางเชิงมุมที่สั้นที่สุดจากตำแหน่งในการเคลื่อนที่ของหุ่นยนต์จาก Node หนึ่งไปยังอีก Node หนึ่ง ที่ได้จากขั้นตอนการทำ A* Search
+
+- Function นี้จะทำ A* Search สำหรับทุกคู่ start point และ Goal point ที่เป็นไปได้ เพื่อหา Sequence ของการเคลื่อนที่สั้นที่สุด เช่น ถ้ามี 3 Goal points จะทำ A* search ใน 6 กรณี ดังนี้
+* Start point -> Goal point 1
+* Start point -> Goal point 2
+* Start point -> Goal point 3
+* Goal point 1 -> Goal point 2
+* Goal point 1 -> Goal point 3
+* Goal point 2 -> Goal point 3
+
 - ทำการ Brute force คำนวณระยะทางจาก Start Node ไปยังทุกเส้นทางที่ผ่านทุก Node ที่เป็นไปได้ เพื่อค้นหา Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุด (เลือกใช้ Brute force เพราะจากขอบเขตของโปรเจ็กต์ สามารถกำหนด Goal point ได้ไม่เกิด 3 ตำแหน่ง ทำให้มี Movement sequence ที่เป็นไปได้ทั้งหมดไม่เกิน 6 รูปแบบ ซึ่งเป็นจำนวนที่สามารถใช้ Brute force เพื่อแก้ปัญหาได้)
-- เมื่อค้นหาเจอ Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุดแล้ว จึงทำการ Return Movement sequence ดังกล่าวออกมา เพื่อนำไปทำ Animation แสดงการเคลื่อนที่ของหุ่นยนต์ต่อไป
+
+ตัวอย่างเช่น หากมี Goal point 3 จุด
+จะทำการค้นหาระยะทางการเคลื่อนที่เชิงมุมรวมของทั้ง 3 Joint ที่สั้นที่สุดจากทั้ง 6 sequence ดังนี้
+* start->goal1->goal2->goal3
+* start->goal1->goal3->goal2
+* start->goal2->goal1->goal3
+* start->goal2->goal3->goal1
+* start->goal3->goal1->goal2
+* start->goal3->goal2->goal1
+
+- เมื่อค้นหาเจอ Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุดแล้ว จึงทำการ Return Movement sequence และ path planning ดังกล่าวออกมา เพื่อนำไปทำ Animation แสดงการเคลื่อนที่ของหุ่นยนต์ต่อไป
 
 #### For use
 ```python
+  tor_grid = load_tor_grid('tor_grid.npy')    # Load Grid 
+  start_joint = Joint(1, 1, -0.5)
+
+  goal_point = []
+  goal_point.append(Point(2, 1.5, 3))
+  goal_point.append(Point(-1, 2, 4))
+  goal_point.append(Point(-1, 2, 3))
+
+  RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+
   posible_paths, seqence = TSP(RRR, start_joint, goal_point, tor_grid, obstacles)
 ```
 #### Result
-1. posible_paths
+1. posible_paths (Example Path form Goal 2 -> Goal 3)
 ```python
 i = 1  
 j = 2  
@@ -338,12 +380,35 @@ Goal 3  -> Goal 1
 ## Animation 
 หลังจากที่ได้ Movement sequence จาก TSP Slover และ Path Planning จาก A* in Joint space ระบบจะทำการแสดง Animation การเคลื่อนที่ของหุ่นยนต์ไปยัง Goal points ต่างๆ โดยจะใช้ Forward Kinematic สำหรับคำนวณตำแหน่งของแต่ละ joint ของหุ่นยนต์ใน Cartesian space และตำแหน่งของ End-Effector เพื่อใช้สำหรับ Plot หุ่นยนต์ใน Animation ทำการ Plot หุ่นยนต์ให้เคลื่อนที่ตาม Path Planning ไปยัง Goal points ต่างๆ ตาม Movement sequence จนครบทั้งหมด แล้วจึงจบการทำงาน
 
-### Demo 
+### Full Project Code Demo with animation 
 กำหนด Goal Point 3 Goal Point ที่ต้องการให้แขนกลเคลื่อนที่ไป 
 ```python
+  def main():
+    tor_grid = load_tor_grid('tor_grid.npy')    # Load Grid 
+
+    start_joint = Joint(1, 1, -0.5)
+    
+    goal_point = []
     goal_point.append(Point(2, 1.5, 3))
     goal_point.append(Point(-1, 2, 4))
     goal_point.append(Point(-1, 2, 3))
+
+    RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+
+    posible_paths, seqence = TSP(RRR, start_joint, goal_point, tor_grid, obstacles)
+
+    if posible_paths != -1:
+        print("**** Optimal Moving Sequence ****")
+        for s in seqence:
+            if(s[1] == -1):
+                print("Start ->", end=" ")
+            else:
+                print("Goal ", s[1]+1, " ->", end=" ")
+            print("Goal ", s[2]+1)
+
+            if s[1] > s[2]:
+                posible_paths[s[0]].path.reverse()
+            animate_path(posible_paths[s[0]].path, obstacles, RRR , posible_paths[s[0]].start)
 ```
 โค้ดจะคำนวณระยะทางรวมและเลือกลำดับที่ใช้ระยะทางน้อยที่สุด
 ```python
@@ -420,6 +485,7 @@ posible_paths = [
 
 ซึ่งจากลำดับดังกล่าวแกนกลจะมี Path การเคลื่อนที่ ที่ได้จาก A* Algorithm ดังนี้
 ```python
+**** Optimal Moving Sequence ****
 Start   -> Goal 2
 Goal 2  -> Goal 3
 Goal 3  -> Goal 1
