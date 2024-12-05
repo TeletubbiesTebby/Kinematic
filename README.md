@@ -295,6 +295,25 @@ q3_sol : 1.18639955229926
 - ทำการ Brute force คำนวณระยะทางจาก Start Node ไปยังทุกเส้นทางที่ผ่านทุก Node ที่เป็นไปได้ เพื่อค้นหา Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุด (เลือกใช้ Brute force เพราะจากขอบเขตของโปรเจ็กต์ สามารถกำหนด Goal point ได้ไม่เกิด 3 ตำแหน่ง ทำให้มี Movement sequence ที่เป็นไปได้ทั้งหมดไม่เกิน 6 รูปแบบ ซึ่งเป็นจำนวนที่สามารถใช้ Brute force เพื่อแก้ปัญหาได้)
 - เมื่อค้นหาเจอ Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุดแล้ว จึงทำการ Return Movement sequence ดังกล่าวออกมา เพื่อนำไปทำ Animation แสดงการเคลื่อนที่ของหุ่นยนต์ต่อไป
 
+##### For use
+```python
+  posible_paths, seqence = TSP(RRR, start_joint, goal_point, tor_grid, obstacles)
+```
+##### Result
+1. posible_paths
+```python
+i = 1  
+j = 2  
+start  = pi - atan(2) ,  -0.335889212936073 + atan(0.5*sqrt(5)) ,  0.585685543457151  
+path   = [(32, 8, 9), (32, 7, 10), (32, 6, 11), (32, 5, 12), (32, 4, 13), (32, 3, 14), (32, 2, 15), (32, 1, 16), (32, 0, 17), (32, 99, 18), (32, 98, 19), (32, 97, 20), (32, 96, 21), (32, 96, 22)]  
+total_dist = 1.5707963267948961
+```
+2. Optimal Moving Sequence
+```python
+Start    -> Goal  2
+Goal  2  -> Goal  3
+Goal  3  -> Goal  1
+```
 
 ## Animation 
 หลังจากที่ได้ Movement sequence จาก TSP Slover และ Path Planning จาก A* in Joint space ระบบจะทำการแสดง Animation การเคลื่อนที่ของหุ่นยนต์ไปยัง Goal points ต่างๆ โดยจะใช้ Forward Kinematic สำหรับคำนวณตำแหน่งของแต่ละ joint ของหุ่นยนต์ใน Cartesian space และตำแหน่งของ End-Effector เพื่อใช้สำหรับ Plot หุ่นยนต์ใน Animation ทำการ Plot หุ่นยนต์ให้เคลื่อนที่ตาม Path Planning ไปยัง Goal points ต่างๆ ตาม Movement sequence จนครบทั้งหมด แล้วจึงจบการทำงาน

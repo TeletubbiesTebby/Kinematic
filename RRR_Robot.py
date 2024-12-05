@@ -1020,8 +1020,10 @@ def main():
     if posible_paths != -1:
         for p in posible_paths:
             print("---------------------------------------------------------")
+            print("**** posible_paths ****")
             print("i=", p.i, " j=", p.j, " start=", p.start.q1, ", ", p.start.q2, ", ", p.start.q3 , " path=", p.path, " total_dist=", p.total_dist)
-
+        
+        print("---------------------------------------------------------")
         print("**** Optimal Moving Sequence ****")
         for s in seqence:
             if(s[1] == -1):
