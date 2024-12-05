@@ -273,15 +273,17 @@ q3_sol : 1.18639955229926
 - จากนั้นทำการ Search หา Child Note ที่เป็นไปได้ทั้งหมดใน 3D Occupancy Grid โดยถ้า child node เป็น Goal points ให้หยุดการ Search แล้วทำการ Return Path Planning และระยะทางเชองเชิงมุมที่หุ่นยนต์ต้องเคลื่อนที่ แต่ถ้า child node ไม่ใช่ Goal points จะทำการ Search ต่อไป
 - ตรวจเช็คว่า child node มีค่าเป็น 1 หรืออยู่ในท่าที่ชมสิ่งกีดขวางใน 3D Occupancy Grid หรือไม่ ถ้าใช่ให้ทำการลบ Child note ดังกล่าวทิ้ง
 - คำนวณ cost ฟังก์ชันของ child note ที่เหลือทั้งหมด 
+  - จากสมการ 
 
-จากสมการ 
+    $$
+    F(n) = G(n)+H(n)
+    $$
 
-![alt text](image.png)
+  โดยที่
 
-โดยที่
-G(n) คือ current path cost หรือ cost ของการเคลื่อนที่จาก Starting point จนถึง child node (ระยะการหมุนเชิงมุมของ Joint ที่ผ่านมา)
+  \(G(n)\) คือ current path cost หรือ cost ของการเคลื่อนที่จาก Starting point จนถึง child node (ระยะการหมุนเชิงมุมของ Joint ที่ผ่านมา)
 
-H(n) คือ heuristic function หรือ estimated cost ในการเคลื่อนที่จาก child node ไปยัง goal point (ระยะการ	เคลื่อนที่เชิงมุมระหว่างแต่ละ joint angle จนถึง Goal point)
+  \(H(n)\) คือ heuristic function หรือ estimated cost ในการเคลื่อนที่จาก child node ไปยัง goal point (ระยะการ	เคลื่อนที่เชิงมุมระหว่างแต่ละ joint angle จนถึง Goal point)
 
 - จากนั้นทำการเลือก child node ที่ให้ค่า Cost funtion น้อยที่สุด เพื่อกำหนดเป็น current Parent NOde แล้วจึงทำวนไป	เรื่อยๆ จนเจอ Goal point
 
