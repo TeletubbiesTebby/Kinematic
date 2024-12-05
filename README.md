@@ -283,11 +283,16 @@ H(n) คือ heuristic function หรือ estimated cost ในการเ
 - จากนั้นทำการเลือก child node ที่ให้ค่า Cost funtion น้อยที่สุด เพื่อกำหนดเป็น current Parent NOde แล้วจึงทำวนไป	เรื่อยๆ จนเจอ Goal point
 
 ## Traveling Salesman Problem (TSP)**
+ใช้สำหรับการแก้ปัญหาการจัดเรียงลำดับ (Sequence) การเคลื่อนที่ของหุ่นยนต์ Starting point ไปยัง Goal point1, Goal point2 และ Goal point3 	เพื่อให้ได้ Sequence การเคลื่อนที่ของหุ่นยนต์ว่าควรเคลื่อนไปยัง Goal point ใดก่อนและหลัง ให้มีระยะทางเชิงมุมในการหมุนของ Joint น้อยที่สุด สำหรับประหยัดพลังงานและเวลาที่ใช้
 
+โดยการทำ TSP Slover ในปัญหานี้ ระบบมีขั้นตอนการทำงาน ดังนี้
+- สร้าง Graph สำหรับทำ TSP Slover เพื่อคนหาเส้นทางที่สั้นที่สุด โดยกำหนดให้ Starting Point, Goal point1, Goal point2 และ Goal point3 เป็น Node ของกราฟ และกำหนดให้ Weight ของกราฟ คือ ระยะทางเชิงมุมที่สั้นที่สุดจากตำแหน่งในการเคลื่อนที่ของหุ่นยนต์จาก Node หนึ่งไปยังอีก Node หนึ่ง ที่ได้จากขั้นตอนการทำ A* Search
+- ทำการ Brute force คำนวณระยะทางจาก Start Node ไปยังทุกเส้นทางที่ผ่านทุก Node ที่เป็นไปได้ เพื่อค้นหา Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุด (เลือกใช้ Brute force เพราะจากขอบเขตของโปรเจ็กต์ สามารถกำหนด Goal point ได้ไม่เกิด 3 ตำแหน่ง ทำให้มี Movement sequence ที่เป็นไปได้ทั้งหมดไม่เกิน 6 รูปแบบ ซึ่งเป็นจำนวนที่สามารถใช้ Brute force เพื่อแก้ปัญหาได้)
+- เมื่อค้นหาเจอ Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุดแล้ว จึงทำการ Return Movement sequence ดังกล่าวออกมา เพื่อนำไปทำ Animation แสดงการเคลื่อนที่ของหุ่นยนต์ต่อไป
 
 
 ## Animation 
-
+หลังจากที่ได้ Movement sequence จาก TSP Slover และ Path Planning จาก A* in Joint space ระบบจะทำการแสดง Animation การเคลื่อนที่ของหุ่นยนต์ไปยัง Goal points ต่างๆ โดยจะใช้ Forward Kinematic สำหรับคำนวณตำแหน่งของแต่ละ joint ของหุ่นยนต์ใน Cartesian space และตำแหน่งของ End-Effector เพื่อใช้สำหรับ Plot หุ่นยนต์ใน Animation ทำการ Plot หุ่นยนต์ให้เคลื่อนที่ตาม Path Planning ไปยัง Goal points ต่างๆ ตาม Movement sequence จนครบทั้งหมด แล้วจึงจบการทำงาน
 
 ### Goal Point 1
 ```python
