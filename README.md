@@ -132,12 +132,17 @@
 - วนลูปใน Grid เพื่อทำการ Fill ค่า โดยทำการเช็คว่าเมื่อค่าตำแหน่งเชิงมุมของทั้ง 3 joint (q1, q2, q3) เป็นค่าต่างๆ ทุกส่วนของ	หุ่นยนต์ชนสิ่งกีดขวางหรือไม่ ถ้าไม่ทำการ Fill 0 ลง Grid ช่องนั้นๆ แต่ถ้าชนสิ่งกีดขวาง ทำการ Fill 1 ลง Grid ช่องนั้นๆ โปรแกรมจะ	ทำงานวนลูปไปเรื่อยๆ จนกระทั่ง Fill ค่าครบทุกช่องของ Grid
 - Return 3D Occupancy Grid
 
-
 ### Goal Point 1
-<video controls src="[Image/Figure 1 2024-12-05 16-04-19.mp4](https://youtu.be/TTIlQTTlwpw)" title="Title"></video>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/TTIlQTTlwpw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
   
 ### Goal Point 2
-<video controls src="Image/Figure 1 2024-12-05 16-04-54.mp4" title="Title"></video>
+<video controls>
+  <source src="Image/Figure 1 2024-12-05 16-04-54.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ### Goal Point 3
-<video controls src="Image/Figure 1 2024-12-05 16-05-18.mp4" title="Title"></video>
+<video controls>
+  <source src="Image/Figure 1 2024-12-05 16-05-18.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
