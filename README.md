@@ -134,14 +134,19 @@
 - วนลูปใน Grid เพื่อทำการ Fill ค่า โดยทำการเช็คว่าเมื่อค่าตำแหน่งเชิงมุมของทั้ง 3 joint (q1, q2, q3) เป็นค่าต่างๆ ทุกส่วนของ	หุ่นยนต์ชนสิ่งกีดขวางหรือไม่ ถ้าไม่ทำการ Fill 0 ลง Grid ช่องนั้นๆ แต่ถ้าชนสิ่งกีดขวาง ทำการ Fill 1 ลง Grid ช่องนั้นๆ โปรแกรมจะ	ทำงานวนลูปไปเรื่อยๆ จนกระทั่ง Fill ค่าครบทุกช่องของ Grid
 - Return 3D Occupancy Grid
 
-
 ### Goal Point 1
-<video controls src="Image/Figure 1 2024-12-05 16-04-19.mp4" title="Title"></video>
+
+https://github.com/user-attachments/assets/f80f6d4a-86c0-418f-8e65-44145fa07b41
   
 ### Goal Point 2
-<video controls src="Image/Figure 1 2024-12-05 16-04-54.mp4" title="Title"></video>
+
+
+
+https://github.com/user-attachments/assets/79a0fe0c-2679-4569-8c1e-003e753744ab
+
 
 ### Goal Point 3
+<<<<<<< HEAD
 <video controls src="Image/Figure 1 2024-12-05 16-05-18.mp4" title="Title"></video>
 
 ## References
@@ -163,3 +168,15 @@
 
 **Motion Planning in Robotics**
 - https://www.google.co.th/books/edition/Robot_Motion_Planning/nQ7aBwAAQBAJ?hl=en&gbpv=1&dq=inauthor:%22Jean-Claude+Latombe%22&printsec=frontcover
+=======
+
+
+
+https://github.com/user-attachments/assets/bcd202e9-e549-4ea1-a5f5-81f19a300de2
+
+
+
+
+
+
+>>>>>>> a334fe149c756b0a11a2b4c0ab39bf645c36acda
