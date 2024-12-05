@@ -85,7 +85,7 @@ download this file (RRR_Robot) and place this file in the folder to be used.
 
 ![Pathmaster Diagram](Image/3.png)
 
-##### Code
+#### Code
 ```python
 def Forward_Kinematics(self):
 
@@ -140,7 +140,7 @@ def Forward_Kinematics(self):
 
         return  joint_pos_plot # (P1, P2, P3, PE)
 ```
-##### For use
+#### For use
 ```python
     RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
     goal = RRR.Forward_Kinematics()
@@ -148,7 +148,7 @@ def Forward_Kinematics(self):
     print('Py :',goal.PE.y)
     print('Pz :',goal.PE.z)
 ```
-##### Result
+#### Result
 ```python
 Px: 1.3862096361477172
 Py: 2.158893595327516
@@ -161,7 +161,7 @@ Pz: 3.7210575544202547
 
 ![Pathmaster Diagram](Image/5.png)
 
-##### Code
+#### Code
 ```python
 def Inverse_Kinematics(self, goal_point):      # goal_point  Point(x,y,z)
         Px = goal_point.x
@@ -191,7 +191,7 @@ def Inverse_Kinematics(self, goal_point):      # goal_point  Point(x,y,z)
 
         return goal_joint_space
 ```
-##### For use
+#### For use
 ```python
   RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
     goal_joint_space = RRR.Inverse_Kinematics(Point(2, 1.5, 3))
@@ -199,7 +199,7 @@ def Inverse_Kinematics(self, goal_point):      # goal_point  Point(x,y,z)
     print("q2_sol :", goal_joint_space.q2)
     print("q3_sol :", goal_joint_space.q3)
 ```
-##### Result
+#### Result
 ```python
 q1_sol : 0.643501108793284
 q2_sol : -0.148798370885615
@@ -293,6 +293,20 @@ q3_sol : 1.18639955229926
 
 - จากนั้นทำการเลือก child node ที่ให้ค่า Cost funtion น้อยที่สุด เพื่อกำหนดเป็น current Parent NOde แล้วจึงทำวนไป	เรื่อยๆ จนเจอ Goal point
 
+#### For use
+```python
+path = astar_torus(tor_grid, start_indices, goal_indices, M)
+```
+#### Result
+```python
+path = [(10, 97, 18), (11, 96, 19), (12, 96, 20), (13, 96, 21), 
+        (14, 96, 22), (15, 96, 22), (16, 96, 22), (17, 96, 22),
+        (18, 96, 22), (19, 96, 22), (20, 96, 22), (21, 96, 22),
+        (22, 96, 22), (23, 96, 22), (24, 96, 22), (25, 96, 22), 
+        (26, 96, 22), (27, 96, 22), (28, 96, 22), (29, 96, 22), 
+        (30, 96, 22), (31, 96, 22), (32, 96, 22)]
+```
+
 ## Traveling Salesman Problem (TSP)**
 ใช้สำหรับการแก้ปัญหาการจัดเรียงลำดับ (Sequence) การเคลื่อนที่ของหุ่นยนต์ Starting point ไปยัง Goal point1, Goal point2 และ Goal point3 	เพื่อให้ได้ Sequence การเคลื่อนที่ของหุ่นยนต์ว่าควรเคลื่อนไปยัง Goal point ใดก่อนและหลัง ให้มีระยะทางเชิงมุมในการหมุนของ Joint น้อยที่สุด สำหรับประหยัดพลังงานและเวลาที่ใช้
 
@@ -301,24 +315,27 @@ q3_sol : 1.18639955229926
 - ทำการ Brute force คำนวณระยะทางจาก Start Node ไปยังทุกเส้นทางที่ผ่านทุก Node ที่เป็นไปได้ เพื่อค้นหา Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุด (เลือกใช้ Brute force เพราะจากขอบเขตของโปรเจ็กต์ สามารถกำหนด Goal point ได้ไม่เกิด 3 ตำแหน่ง ทำให้มี Movement sequence ที่เป็นไปได้ทั้งหมดไม่เกิน 6 รูปแบบ ซึ่งเป็นจำนวนที่สามารถใช้ Brute force เพื่อแก้ปัญหาได้)
 - เมื่อค้นหาเจอ Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุดแล้ว จึงทำการ Return Movement sequence ดังกล่าวออกมา เพื่อนำไปทำ Animation แสดงการเคลื่อนที่ของหุ่นยนต์ต่อไป
 
-##### For use
+#### For use
 ```python
   posible_paths, seqence = TSP(RRR, start_joint, goal_point, tor_grid, obstacles)
 ```
-##### Result
+#### Result
 1. posible_paths
 ```python
 i = 1  
 j = 2  
 start  = pi - atan(2) ,  -0.335889212936073 + atan(0.5*sqrt(5)) ,  0.585685543457151  
-path   = [(32, 8, 9), (32, 7, 10), (32, 6, 11), (32, 5, 12), (32, 4, 13), (32, 3, 14), (32, 2, 15), (32, 1, 16), (32, 0, 17), (32, 99, 18), (32, 98, 19), (32, 97, 20), (32, 96, 21), (32, 96, 22)]  
+path   = [(32, 8, 9), (32, 7, 10), (32, 6, 11), (32, 5, 12), 
+          (32, 4, 13), (32, 3, 14), (32, 2, 15), (32, 1, 16), 
+          (32, 0, 17),(32, 99, 18), (32, 98, 19), (32, 97, 20), 
+          (32, 96, 21), (32, 96, 22)]  
 total_dist = 1.5707963267948961
 ```
 2. Optimal Moving Sequence
 ```python
-Start    -> Goal  2
-Goal  2  -> Goal  3
-Goal  3  -> Goal  1
+Start   -> Goal 2
+Goal 2  -> Goal 3
+Goal 3  -> Goal 1
 ```
 
 ## Animation 
