@@ -48,9 +48,7 @@
 
 ## System Diagram
 
-<div style="text-align: center;">
 ![Pathmaster Diagram](Image/1.png)
-</div>
 
 ## Installation
 download this file (RRR_Robot) and place this file in the folder to be used.
