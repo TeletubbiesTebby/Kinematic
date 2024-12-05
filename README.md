@@ -283,7 +283,7 @@ def main():
 - จากนั้นทำการ Search หา Child Note ที่เป็นไปได้ทั้งหมดใน 3D Occupancy Grid โดยถ้า child node เป็น Goal points ให้หยุดการ Search แล้วทำการ Return Path Planning และระยะทางเชองเชิงมุมที่หุ่นยนต์ต้องเคลื่อนที่ แต่ถ้า child node ไม่ใช่ Goal points จะทำการ Search ต่อไป
 - ตรวจเช็คว่า child node มีค่าเป็น 1 หรืออยู่ในท่าที่ชมสิ่งกีดขวางใน 3D Occupancy Grid หรือไม่ ถ้าใช่ให้ทำการลบ Child note ดังกล่าวทิ้ง
 - คำนวณ cost ฟังก์ชันของ child note ที่เหลือทั้งหมด 
-  - จากสมการ 
+  จากสมการ 
 
     $$
     F(n) = G(n)+H(n)
