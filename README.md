@@ -146,7 +146,10 @@ https://github.com/user-attachments/assets/79a0fe0c-2679-4569-8c1e-003e753744ab
 ### Goal Point 3
 
 
-Uploading Figure 1 2024-12-05 16-05-18.mp4…
+
+https://github.com/user-attachments/assets/bcd202e9-e549-4ea1-a5f5-81f19a300de2
+
+
 
 
 
