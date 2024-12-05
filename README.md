@@ -133,9 +133,20 @@
 - Return 3D Occupancy Grid
 
 ### Goal Point 1
+https://github.com/user-attachments/assets/e275c856-42b5-4c46-bf9c-1a1ab3fa70d5
+
 
   
 ### Goal Point 2
 
 
+
+https://github.com/user-attachments/assets/79a0fe0c-2679-4569-8c1e-003e753744ab
+
+
 ### Goal Point 3
+
+
+
+https://github.com/user-attachments/assets/f80f6d4a-86c0-418f-8e65-44145fa07b41
+
