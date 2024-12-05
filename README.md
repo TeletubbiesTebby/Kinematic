@@ -65,6 +65,9 @@ download this file (RRR_Robot) and place this file in the folder to be used.
 - **Init**
   - Input : link length (l1, l2, l3), init_link_angle (q1, q2, q3)
   - Output : None
+```python
+ RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+```
 
 - **Inverse Kinematic**
   - Input : goal_point (Px, Py, Pz)
@@ -142,9 +145,9 @@ def Forward_Kinematics(self):
 ```
 ##### Result
 ```python
-Px :1.62758256189037*cos(2) + 0.479425538604203*sin(2) + 1.62758256189037
-Py :-0.479425538604203*cos(2) + 0.479425538604203 + 1.62758256189037*sin(2)
-Pz :-0.958851077208406*cos(1) + 1.5 + 3.25516512378075*sin(1)
+Px: 1.3862096361477172
+Py: 2.158893595327516
+Pz: 3.7210575544202547
 ```
 
 ### RRR Robot - Inverse Kinematic
