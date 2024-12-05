@@ -47,7 +47,7 @@
 ---
 
 ## System Diagram
-![Pathmaster Diagram](Image/1.png)
+<img src="Image/1.png" alt="Pathmaster Diagram" width="500" />
 
 
 ## Installation
