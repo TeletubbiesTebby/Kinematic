@@ -325,23 +325,23 @@ path = [(10, 97, 18), (11, 96, 19), (12, 96, 20), (13, 96, 21),
 โดยการทำ TSP Slover ในปัญหานี้ ระบบมีขั้นตอนการทำงาน ดังนี้
 
 - Function นี้จะทำ A* Search สำหรับทุกคู่ start point และ Goal point ที่เป็นไปได้ เพื่อหา Sequence ของการเคลื่อนที่สั้นที่สุด เช่น ถ้ามี 3 Goal points จะทำ A* search ใน 6 กรณี ดังนี้
-* Start point -> Goal point 1
-* Start point -> Goal point 2
-* Start point -> Goal point 3
-* Goal point 1 -> Goal point 2
-* Goal point 1 -> Goal point 3
-* Goal point 2 -> Goal point 3
+** Start point -> Goal point 1
+** Start point -> Goal point 2
+** Start point -> Goal point 3
+** Goal point 1 -> Goal point 2
+** Goal point 1 -> Goal point 3
+** Goal point 2 -> Goal point 3
 
 - ทำการ Brute force คำนวณระยะทางจาก Start Node ไปยังทุกเส้นทางที่ผ่านทุก Node ที่เป็นไปได้ เพื่อค้นหา Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุด (เลือกใช้ Brute force เพราะจากขอบเขตของโปรเจ็กต์ สามารถกำหนด Goal point ได้ไม่เกิด 3 ตำแหน่ง ทำให้มี Movement sequence ที่เป็นไปได้ทั้งหมดไม่เกิน 6 รูปแบบ ซึ่งเป็นจำนวนที่สามารถใช้ Brute force เพื่อแก้ปัญหาได้)
 
 ตัวอย่างเช่น หากมี Goal point 3 จุด
 จะทำการค้นหาระยะทางการเคลื่อนที่เชิงมุมรวมของทั้ง 3 Joint ที่สั้นที่สุดจากทั้ง 6 sequence ดังนี้
-* start->goal1->goal2->goal3
-* start->goal1->goal3->goal2
-* start->goal2->goal1->goal3
-* start->goal2->goal3->goal1
-* start->goal3->goal1->goal2
-* start->goal3->goal2->goal1
+** start->goal1->goal2->goal3
+** start->goal1->goal3->goal2
+** start->goal2->goal1->goal3
+** start->goal2->goal3->goal1
+** start->goal3->goal1->goal2
+** start->goal3->goal2->goal1
 
 - เมื่อค้นหาเจอ Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุดแล้ว จึงทำการ Return Movement sequence และ path planning ดังกล่าวออกมา เพื่อนำไปทำ Animation แสดงการเคลื่อนที่ของหุ่นยนต์ต่อไป
 
@@ -413,6 +413,7 @@ Goal 3  -> Goal 1
 โค้ดจะคำนวณระยะทางรวมและเลือกลำดับที่ใช้ระยะทางน้อยที่สุด
 ```python
 posible_paths = [
+    # Path From Start -> Goal 1
     P2P_Path(
         -1, 0, (1, 1, -0.5),
         [
@@ -425,6 +426,7 @@ posible_paths = [
         ],
         3.0787608005179976
     ),
+    # Path From Start -> Goal 2
     P2P_Path(
         -1, 1, (1, 1, -0.5),
         [
@@ -435,6 +437,7 @@ posible_paths = [
         ],
         2.5761059759436304
     ),
+    # Path From Start -> Goal 3
     P2P_Path(
         -1, 2, (1, 1, -0.5),
         [
@@ -448,6 +451,7 @@ posible_paths = [
         ],
         4.146902302738527
     ),
+    # Path From Goal 1 -> Goal 2
     P2P_Path(
         0, 1, (0.643501108793284, -0.148798370885615, 1.18639955229926),
         [
@@ -459,6 +463,7 @@ posible_paths = [
         ],
         2.638937829015426
     ),
+    # Path From Goal 1 -> Goal 3
     P2P_Path(
         0, 2, (0.643501108793284, -0.148798370885615, 1.18639955229926),
         [
@@ -470,6 +475,7 @@ posible_paths = [
         ],
         1.6964600329384882
     ),
+    # Path From Goal 2 -> Goal 3
     P2P_Path(
         1, 2, ("pi - atan(2)", "-0.335889212936073 + atan(0.5*sqrt(5))", 0.585685543457151),
         [
