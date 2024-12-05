@@ -286,7 +286,25 @@ H(n) คือ heuristic function หรือ estimated cost ในการเ
 - จากนั้นทำการเลือก child node ที่ให้ค่า Cost funtion น้อยที่สุด เพื่อกำหนดเป็น current Parent NOde แล้วจึงทำวนไป	เรื่อยๆ จนเจอ Goal point
 
 ## Traveling Salesman Problem (TSP)**
-
+##### For use
+```python
+  posible_paths, seqence = TSP(RRR, start_joint, goal_point, tor_grid, obstacles)
+```
+##### Result
+1. posible_paths
+```python
+i = 1  
+j = 2  
+start  = pi - atan(2) ,  -0.335889212936073 + atan(0.5*sqrt(5)) ,  0.585685543457151  
+path   = [(32, 8, 9), (32, 7, 10), (32, 6, 11), (32, 5, 12), (32, 4, 13), (32, 3, 14), (32, 2, 15), (32, 1, 16), (32, 0, 17), (32, 99, 18), (32, 98, 19), (32, 97, 20), (32, 96, 21), (32, 96, 22)]  
+total_dist = 1.5707963267948961
+```
+2. Optimal Moving Sequence
+```python
+Start    -> Goal  2
+Goal  2  -> Goal  3
+Goal  3  -> Goal  1
+```
 
 
 ## Animation 
