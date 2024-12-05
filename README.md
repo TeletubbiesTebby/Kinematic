@@ -72,10 +72,110 @@
 ### RRR Robot - Forward Kinematic
 ![Pathmaster Diagram](Image/3.png)
 
+##### Code
+```python
+def Forward_Kinematics(self):
+
+        P1 = Point(x=0, y=0, z=0)
+        P2 = Point(x=0, y=0, z=self.l1)
+
+        T0_1 = sp.Matrix([
+            [sp.cos(self.q1), -sp.sin(self.q1), 0, 0],
+            [sp.sin(self.q1), sp.cos(self.q1), 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        T1_2 = sp.Matrix([
+            [1, 0, 0, 0],
+            [0, 0, -1, 0],
+            [0, 1, 0, self.l1],
+            [0, 0, 0, 1]
+        ])
+
+        T2_3 = sp.Matrix([
+            [sp.cos(self.q2), -sp.sin(self.q2), 0, 0],
+            [sp.sin(self.q2), sp.cos(self.q2), 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        T3_4 = sp.Matrix([
+            [sp.cos(self.q3), -sp.sin(self.q3), 0, self.l2],
+            [sp.sin(self.q3), sp.cos(self.q3), 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        T4_E = sp.Matrix([
+            [1, 0, 0, self.l3],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        T0_4 = sp.simplify(T0_1 * T1_2 * T2_3 * T3_4)
+        P3 = Point(x=T0_4[0, 3], y=T0_4[1, 3], z=T0_4[2, 3])
+        # print("P3: ", P3.x, " , ", P3.y, " , ", P3.z)
+
+        # Compute the overall transformation matrix T0_E
+        T0_E = sp.simplify(T0_4 * T4_E)
+        PE = Point(x=T0_E[0, 3], y=T0_E[1, 3], z=T0_E[2, 3])
+        # print("PE: ", PE.x, " , ", PE.y, " , ", PE.z)
+
+        joint_pos_plot = Joint_Pos_Plot(P1, P2, P3, PE)
+
+        return  joint_pos_plot # (P1, P2, P3, PE)
+```
+##### Result
+```python
+Px :1.62758256189037*cos(2) + 0.479425538604203*sin(2) + 1.62758256189037
+Py :-0.479425538604203*cos(2) + 0.479425538604203 + 1.62758256189037*sin(2)
+Pz :-0.958851077208406*cos(1) + 1.5 + 3.25516512378075*sin(1)
+```
+
 ### RRR Robot - Inverse Kinematic
 ![Pathmaster Diagram](Image/4.png)
 
 ![Pathmaster Diagram](Image/5.png)
+
+##### Code
+```python
+def Inverse_Kinematics(self, goal_point):      # goal_point  Point(x,y,z)
+        Px = goal_point.x
+        Py = goal_point.y
+        Pz = goal_point.z
+
+        # Solution for q1
+        q1_sol = [sp.atan2(Py, Px), sp.pi + sp.atan2(Py, Px)]
+
+        # Solutions for q2
+        r = sp.sqrt(Px**2 + Py**2 + (Pz - self.l1)**2)
+        cos_row = (r**2 + self.l2**2 - self.l3**2) / (2 * r * self.l2)
+        sin_row = [sp.sqrt(1 - cos_row**2), -sp.sqrt(1 - cos_row**2)]
+
+        row = [sp.atan2(sin_row[0], cos_row), sp.atan2(sin_row[1], cos_row)]
+        alpha = sp.atan2(Pz - self.l1, sp.sqrt(Px**2 + Py**2))
+
+        q2_sol = [alpha - row[0], alpha - row[1]]
+
+        # Solutions for q3
+        cos_3 = (r**2 - self.l2**2 - self.l3**2) / (2 * self.l2 * self.l3)
+        sin_3 = [sp.sqrt(1 - cos_3**2), -sp.sqrt(1 - cos_3**2)]
+
+        q3_sol = [sp.atan2(sin_3[0], cos_3), sp.atan2(sin_3[1], cos_3)]
+
+        goal_joint_space =  Joint(q1_sol[0], q2_sol[0], q3_sol[0])
+
+        return goal_joint_space
+```
+
+##### Result
+```python
+q1_sol : 0.643501108793284
+q2_sol : -0.148798370885615
+q3_sol : 1.18639955229926
+```
 
 ---
 
