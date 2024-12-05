@@ -592,7 +592,9 @@ def TSP(RRR, start_joint, goal_points, tor_grid, obstacles):
 
             # Run A* to find the path
             path = astar_torus(tor_grid, start_indices, goal_indices, M)
-            
+            print('---------------------------------------------------------')
+            print('path',path)
+            print('---------------------------------------------------------')
             if path:
                 q1_dist, q2_dist, q3_dist = calculate_joint_distance(path, M)
 
