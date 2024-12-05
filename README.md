@@ -47,8 +47,10 @@
 ---
 
 ## System Diagram
-<img src="Image/1.png" alt="Pathmaster Diagram" width="500" />
 
+<div style="text-align: center;">
+![Pathmaster Diagram](Image/1.png)
+</div>
 
 ## Installation
 download this file (RRR_Robot) and place this file in the folder to be used.
@@ -58,7 +60,9 @@ download this file (RRR_Robot) and place this file in the folder to be used.
 
 **Design**
 
-![Pathmaster Diagram](Image/2.png)
+<div style="text-align: center;">
+<img src="Image/2.png" alt="Pathmaster Diagram" width="700" />
+</div>
 
 **Class RRR Robot**
 
@@ -78,6 +82,7 @@ download this file (RRR_Robot) and place this file in the folder to be used.
   - Output : joint_pos_plot (P1, P2, P3, PE)
 
 ### RRR Robot - Forward Kinematic
+
 ![Pathmaster Diagram](Image/3.png)
 
 ##### Code
@@ -151,6 +156,7 @@ Pz: 3.7210575544202547
 ```
 
 ### RRR Robot - Inverse Kinematic
+
 ![Pathmaster Diagram](Image/4.png)
 
 ![Pathmaster Diagram](Image/5.png)
