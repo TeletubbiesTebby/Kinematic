@@ -45,9 +45,6 @@ class Joint:
     def get_angles(self):
         return [self.q1, self.q2, self.q3]
     
-
-
-
 class P2P_Path:
     def __init__(self, i, j, start, path, total_dist):
         self.i = i
@@ -186,8 +183,6 @@ def detect_collision(obstacles, joint_positions):
     print(f"Minimum distance between joints and obstacles: {min_joint_distance:.2f}")
     print(f"Minimum distance between arm segments and obstacles: {min_segment_distance:.2f}")
     return 0  # No collision
-
-
 
 
 def get_occupancy_grid(arm, obstacles):
