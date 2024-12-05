@@ -325,23 +325,23 @@ path = [(10, 97, 18), (11, 96, 19), (12, 96, 20), (13, 96, 21),
 โดยการทำ TSP Slover ในปัญหานี้ ระบบมีขั้นตอนการทำงาน ดังนี้
 
 - Function นี้จะทำ A* Search สำหรับทุกคู่ start point และ Goal point ที่เป็นไปได้ เพื่อหา Sequence ของการเคลื่อนที่สั้นที่สุด เช่น ถ้ามี 3 Goal points จะทำ A* search ใน 6 กรณี ดังนี้
-** Start point -> Goal point 1
-** Start point -> Goal point 2
-** Start point -> Goal point 3
-** Goal point 1 -> Goal point 2
-** Goal point 1 -> Goal point 3
-** Goal point 2 -> Goal point 3
+  * Start point -> Goal point 1
+  * Start point -> Goal point 2
+  * Start point -> Goal point 3
+  * Goal point 1 -> Goal point 2
+  * Goal point 1 -> Goal point 3
+  * Goal point 2 -> Goal point 3
 
 - ทำการ Brute force คำนวณระยะทางจาก Start Node ไปยังทุกเส้นทางที่ผ่านทุก Node ที่เป็นไปได้ เพื่อค้นหา Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุด (เลือกใช้ Brute force เพราะจากขอบเขตของโปรเจ็กต์ สามารถกำหนด Goal point ได้ไม่เกิด 3 ตำแหน่ง ทำให้มี Movement sequence ที่เป็นไปได้ทั้งหมดไม่เกิน 6 รูปแบบ ซึ่งเป็นจำนวนที่สามารถใช้ Brute force เพื่อแก้ปัญหาได้)
 
 ตัวอย่างเช่น หากมี Goal point 3 จุด
 จะทำการค้นหาระยะทางการเคลื่อนที่เชิงมุมรวมของทั้ง 3 Joint ที่สั้นที่สุดจากทั้ง 6 sequence ดังนี้
-** start->goal1->goal2->goal3
-** start->goal1->goal3->goal2
-** start->goal2->goal1->goal3
-** start->goal2->goal3->goal1
-** start->goal3->goal1->goal2
-** start->goal3->goal2->goal1
+  * start->goal1->goal2->goal3
+  * start->goal1->goal3->goal2
+  * start->goal2->goal1->goal3
+  * start->goal2->goal3->goal1
+  * start->goal3->goal1->goal2
+  * start->goal3->goal2->goal1
 
 - เมื่อค้นหาเจอ Movement sequence ที่มีระยะทางเชิงมุมที่สั้นที่สุดแล้ว จึงทำการ Return Movement sequence และ path planning ดังกล่าวออกมา เพื่อนำไปทำ Animation แสดงการเคลื่อนที่ของหุ่นยนต์ต่อไป
 
