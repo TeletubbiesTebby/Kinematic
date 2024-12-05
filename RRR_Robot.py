@@ -1003,16 +1003,16 @@ def main():
     goal_point.append(Point(-1, 2, 3))
 
     RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+    # goal = RRR.Forward_Kinematics()
+    # print('Px :',goal.PE.x)
+    # print('Py :',goal.PE.y)
+    # print('Pz :',goal.PE.z)
     
-    goal = RRR.Forward_Kinematics()
-    print('Px :',goal.PE.x)
-    print('Py :',goal.PE.y)
-    print('Pz :',goal.PE.z)
-    
-    goal_joint_space = RRR.Inverse_Kinematics(Point(2, 1.5, 3))
-    print("q1_sol :", goal_joint_space.q1)
-    print("q2_sol :", goal_joint_space.q2)
-    print("q3_sol :", goal_joint_space.q3)
+    # RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+    # goal_joint_space = RRR.Inverse_Kinematics(Point(2, 1.5, 3))
+    # print("q1_sol :", goal_joint_space.q1)
+    # print("q2_sol :", goal_joint_space.q2)
+    # print("q3_sol :", goal_joint_space.q3)
    
 
     posible_paths, seqence = TSP(RRR, start_joint, goal_point, tor_grid, obstacles)

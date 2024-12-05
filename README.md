@@ -132,6 +132,14 @@ def Forward_Kinematics(self):
 
         return  joint_pos_plot # (P1, P2, P3, PE)
 ```
+##### For use
+```python
+    RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+    goal = RRR.Forward_Kinematics()
+    print('Px :',goal.PE.x)
+    print('Py :',goal.PE.y)
+    print('Pz :',goal.PE.z)
+```
 ##### Result
 ```python
 Px :1.62758256189037*cos(2) + 0.479425538604203*sin(2) + 1.62758256189037
@@ -174,7 +182,14 @@ def Inverse_Kinematics(self, goal_point):      # goal_point  Point(x,y,z)
 
         return goal_joint_space
 ```
-
+##### For use
+```python
+  RRR = RRR_Robot(l1=1.5, l2=1.5, l3=2, q1=start_joint.q1, q2=start_joint.q2, q3=start_joint.q3)
+    goal_joint_space = RRR.Inverse_Kinematics(Point(2, 1.5, 3))
+    print("q1_sol :", goal_joint_space.q1)
+    print("q2_sol :", goal_joint_space.q2)
+    print("q3_sol :", goal_joint_space.q3)
+```
 ##### Result
 ```python
 q1_sol : 0.643501108793284
