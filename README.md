@@ -1,4 +1,4 @@
-# PATHMASTER PROJECT
+# FRA333: PATHMASTER KINEMATIC PROJECT
 
 ## จุดประสงค์โครงการ
 1. เพื่อศึกษาการควบคุมหุ่นยนต์ 3 DoF (RRR) ในการหลบสิ่งกีดขวางใน Work Space เพื่อประยุกต์ความรู้ด้าน Path Planning: Route Optimization ในการค้นหาเส้นทางที่สั้นที่สุด โดยมุ่งหวังให้การเคลื่อนที่มีการหมุนของข้อต่อน้อยที่สุด  
