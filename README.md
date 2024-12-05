@@ -133,16 +133,9 @@
 - Return 3D Occupancy Grid
 
 ### Goal Point 1
-<iframe width="560" height="315" src="https://www.youtube.com/embed/TTIlQTTlwpw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
   
 ### Goal Point 2
-<video controls>
-  <source src="Image/Figure 1 2024-12-05 16-04-54.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+
 
 ### Goal Point 3
-<video controls>
-  <source src="Image/Figure 1 2024-12-05 16-05-18.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
