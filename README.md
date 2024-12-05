@@ -135,6 +135,38 @@
 - วนลูปใน Grid เพื่อทำการ Fill ค่า โดยทำการเช็คว่าเมื่อค่าตำแหน่งเชิงมุมของทั้ง 3 joint (q1, q2, q3) เป็นค่าต่างๆ ทุกส่วนของ	หุ่นยนต์ชนสิ่งกีดขวางหรือไม่ ถ้าไม่ทำการ Fill 0 ลง Grid ช่องนั้นๆ แต่ถ้าชนสิ่งกีดขวาง ทำการ Fill 1 ลง Grid ช่องนั้นๆ โปรแกรมจะ	ทำงานวนลูปไปเรื่อยๆ จนกระทั่ง Fill ค่าครบทุกช่องของ Grid
 - Return 3D Occupancy Grid
 
+### path planning
+**A* in Joint space**
+ใช้ A* Algorithm ใน Joint Space เพื่อหาเส้นทางที่สั้นที่สุดเชิงมุม โดยมี Input สำหรับการทำ A* Search คือ 3D Occupancy Grid และตำแหน่ง Goal points ใน Joint space (ที่ได้จาก Inverse Kinematic) โดยระบบจะทำ A* Search สำหรับทุกคู่ Sequence ของการเคลื่อนที่ เช่น ถ้ามี 3 Goal points จะทำ A* search ใน 6 กรณี ดังนี้
+- Start point -> Goal point 1
+- Start point -> Goal point 2
+- Start point -> Goal point 3
+- Goal point 1 -> Goal point 2
+- Goal point 1 -> Goal point 3
+- Goal point 2 -> Goal point 3
+
+โดยการค้นหา Path Planning สำหรับแต่ละคู่ของ node ด้วย A* algorithm มีหลักการทำงาน ดังนี้
+
+เริ่มจากการกำหนด Init Joint position และ Goal Joint position
+- กำหนด Init Joint position เป็น Parent node
+- จากนั้นทำการ Search หา Child Note ที่เป็นไปได้ทั้งหมดใน 3D Occupancy Grid โดยถ้า child node เป็น Goal points ให้หยุดการ Search แล้วทำการ Return Path Planning และระยะทางเชองเชิงมุมที่หุ่นยนต์ต้องเคลื่อนที่ แต่ถ้า child node ไม่ใช่ Goal points จะทำการ Search ต่อไป
+- ตรวจเช็คว่า child node มีค่าเป็น 1 หรืออยู่ในท่าที่ชมสิ่งกีดขวางใน 3D Occupancy Grid หรือไม่ ถ้าใช่ให้ทำการลบ Child note ดังกล่าวทิ้ง
+- คำนวณ cost ฟังก์ชันของ child note ที่เหลือทั้งหมด 
+
+จากสมการ 
+![alt text](image.png)
+
+โดยที่
+	G(n) คือ current path cost หรือ cost ของการเคลื่อนที่จาก Starting point จนถึง child node (ระยะการหมุนเชิงมุมของ Joint ที่ผ่านมา)
+	H(n) คือ heuristic function หรือ estimated cost ในการเคลื่อนที่จาก child node ไปยัง goal point (ระยะการ	เคลื่อนที่เชิงมุมระหว่างแต่ละ joint angle จนถึง Goal point)
+
+- จากนั้นทำการเลือก child node ที่ให้ค่า Cost funtion น้อยที่สุด เพื่อกำหนดเป็น current Parent NOde แล้วจึงทำวนไป	เรื่อยๆ จนเจอ Goal point
+
+**Traveling Salesman Problem (TSP)**
+
+
+
+### Animation 
 
 ### Goal Point 1
 <video controls src="Image/Figure 1 2024-12-05 16-04-19.mp4" title="Title"></video>

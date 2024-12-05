@@ -188,8 +188,6 @@ def detect_collision(obstacles, joint_positions):
     return 0  # No collision
 
 
-
-
 def get_occupancy_grid(arm, obstacles):
     grid = np.zeros((M, M, M), dtype=int)  # Create a 3D grid
     theta_list = [2 * i * pi / M for i in range(M)]  # Generate joint angles
