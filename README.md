@@ -139,7 +139,7 @@ download this file (RRR_Robot) and place this file in the folder to be used.
 - วนลูปใน Grid เพื่อทำการ Fill ค่า โดยทำการเช็คว่าเมื่อค่าตำแหน่งเชิงมุมของทั้ง 3 joint (q1, q2, q3) เป็นค่าต่างๆ ทุกส่วนของ	หุ่นยนต์ชนสิ่งกีดขวางหรือไม่ ถ้าไม่ทำการ Fill 0 ลง Grid ช่องนั้นๆ แต่ถ้าชนสิ่งกีดขวาง ทำการ Fill 1 ลง Grid ช่องนั้นๆ โปรแกรมจะ	ทำงานวนลูปไปเรื่อยๆ จนกระทั่ง Fill ค่าครบทุกช่องของ Grid
 - Return 3D Occupancy Grid
 
-**A* in Joint space**
+## A* in Joint space
 ใช้ A* Algorithm ใน Joint Space เพื่อหาเส้นทางที่สั้นที่สุดเชิงมุม โดยมี Input สำหรับการทำ A* Search คือ 3D Occupancy Grid และตำแหน่ง Goal points ใน Joint space (ที่ได้จาก Inverse Kinematic) โดยระบบจะทำ A* Search สำหรับทุกคู่ Sequence ของการเคลื่อนที่ เช่น ถ้ามี 3 Goal points จะทำ A* search ใน 6 กรณี ดังนี้
 - Start point -> Goal point 1
 - Start point -> Goal point 2
@@ -157,19 +157,21 @@ download this file (RRR_Robot) and place this file in the folder to be used.
 - คำนวณ cost ฟังก์ชันของ child note ที่เหลือทั้งหมด 
 
 จากสมการ 
+
 ![alt text](image.png)
 
 โดยที่
-	G(n) คือ current path cost หรือ cost ของการเคลื่อนที่จาก Starting point จนถึง child node (ระยะการหมุนเชิงมุมของ Joint ที่ผ่านมา)
-	H(n) คือ heuristic function หรือ estimated cost ในการเคลื่อนที่จาก child node ไปยัง goal point (ระยะการ	เคลื่อนที่เชิงมุมระหว่างแต่ละ joint angle จนถึง Goal point)
+G(n) คือ current path cost หรือ cost ของการเคลื่อนที่จาก Starting point จนถึง child node (ระยะการหมุนเชิงมุมของ Joint ที่ผ่านมา)
+
+H(n) คือ heuristic function หรือ estimated cost ในการเคลื่อนที่จาก child node ไปยัง goal point (ระยะการ	เคลื่อนที่เชิงมุมระหว่างแต่ละ joint angle จนถึง Goal point)
 
 - จากนั้นทำการเลือก child node ที่ให้ค่า Cost funtion น้อยที่สุด เพื่อกำหนดเป็น current Parent NOde แล้วจึงทำวนไป	เรื่อยๆ จนเจอ Goal point
 
-**Traveling Salesman Problem (TSP)**
+## Traveling Salesman Problem (TSP)**
 
 
 
-### Animation 
+## Animation 
 
 
 ### Goal Point 1
