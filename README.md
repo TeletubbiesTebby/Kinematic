@@ -134,7 +134,7 @@
 
 
 ### Goal Point 1
-<video controls src="Image/Figure 1 2024-12-05 16-04-19.mp4" title="Title"></video>
+<video controls src="[Image/Figure 1 2024-12-05 16-04-19.mp4](https://youtu.be/TTIlQTTlwpw)" title="Title"></video>
   
 ### Goal Point 2
 <video controls src="Image/Figure 1 2024-12-05 16-04-54.mp4" title="Title"></video>
