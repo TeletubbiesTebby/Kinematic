@@ -133,21 +133,25 @@
 - Return 3D Occupancy Grid
 
 ### Goal Point 1
-```goal_point.append(Point(2, 1.5, 3))```
+```python
+goal_point.append(Point(2, 1.5, 3))
+```
 
 https://github.com/user-attachments/assets/f80f6d4a-86c0-418f-8e65-44145fa07b41
   
 ### Goal Point 2
 
-
-
+```python
+goal_point.append(Point(-1, 2, 4))
+```
 https://github.com/user-attachments/assets/79a0fe0c-2679-4569-8c1e-003e753744ab
 
 
 ### Goal Point 3
 
-
-
+```python
+ goal_point.append(Point(-1, 2, 3))
+```
 https://github.com/user-attachments/assets/bcd202e9-e549-4ea1-a5f5-81f19a300de2
 
 
