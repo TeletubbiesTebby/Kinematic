@@ -9,7 +9,7 @@
 1. ระบบควบคุมหุ่นยนต์ 3 DoF (RRR Robot)
 - ระบบควบคุมหุ่นยนต์จะคำนวณการหมุนของข้อต่อให้น้อยที่สุดในเชิงมุม  
 - ระบบจะทำการคำนวณตำแหน่งของปลายหุ่นยนต์ (End Effector) ตามเป้าหมายที่กำหนด  
-  - ระบบจะต้องสามารถปรับเปลี่ยนตำแหน่ง Goal Points และสิ่งกีดขวางในพื้นที่งานได้
+- ระบบจะต้องสามารถปรับเปลี่ยนตำแหน่ง Goal Points และสิ่งกีดขวางในพื้นที่งานได้
 
 2. การตั้งค่า Input Parameters สำหรับระบบ
 - ความยาวของ link หุ่นยนต์สามารถกำหนดและปรับเปลี่ยนได้  
@@ -50,7 +50,9 @@
 ![Pathmaster Diagram](Image/1.png)
 
 ### RRR Robot
+
 **Design**
+
 ![Pathmaster Diagram](Image/2.png)
 
 **Class RRR Robot**
@@ -155,7 +157,22 @@ https://github.com/user-attachments/assets/79a0fe0c-2679-4569-8c1e-003e753744ab
 https://github.com/user-attachments/assets/bcd202e9-e549-4ea1-a5f5-81f19a300de2
 
 
+## References
 
+**RRR Robot**
+- https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.researchgate.net/profile/Mohamed_Mourad_Lafifi/post/How_to_avoid_singular_configurations/attachment/59d6361b79197b807799389a/AS%253A386996594855942%25401469278586939/download/Spong%2B-%2BRobot%2Bmodeling%2Band%2BControl.pdf&ved=2ahUKEwjh4_TenpCKAxVlfGwGHZzCFWsQFnoECB8QAQ&usg=AOvVaw0SmJvmoTWd1k0O3PyRfDSI
 
+**Obstacle avoidance path planning of 6-DOF robotic arm based on improved A∗ algorithm and artificial potential field method**
+- https://www.cambridge.org/core/services/aop-cambridge-core/content/view/1d3708c34fe42078d5cf0b8f3492e8b0/s0263574723001546a.pdf/obstacle-avoidance-path-planning-of-6-dof-robotic-arm-based-on-improved-a-algorithm-and-artificial-potential-field-method.pdf
 
+**Forward Kinematic and Inverse Kinematic**
+- https://jitel.polban.ac.id/jitel/article/download/101/42
 
+**Traveling Salesman Problem (TSP)**
+- https://books.google.co.th/books?hl=th&lr=&id=vhsjbqomduic&oi=fnd&pg=pp11&dq=applegate,+d.l.,+et+al.+(2007).+the+traveling+salesman+problem:+a+computational+study.+princeton+university+press.&ots=ylcevuozc5&sig=tjqx2imqtuxvpvnu95zqpyj2qpg&redir_esc=y#v=onepage&q&f=false
+
+**Motion planning method**
+- https://books.google.co.th/books?hl=th&lr=&id=nQ7aBwAAQBAJ&oi=fnd&pg=PR9&dq=MOTION+PLANNING+IN+ROBOTICS&ots=7qjSoViLl-&sig=qFbON-dMPQR2RdbUeZdRUOTa2uU&redir_esc=y#v=onepage&q&f=false
+
+**Motion Planning in Robotics**
+- https://www.google.co.th/books/edition/Robot_Motion_Planning/nQ7aBwAAQBAJ?hl=en&gbpv=1&dq=inauthor:%22Jean-Claude+Latombe%22&printsec=frontcover
