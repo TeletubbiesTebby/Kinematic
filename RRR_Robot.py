@@ -45,9 +45,6 @@ class Joint:
     def get_angles(self):
         return [self.q1, self.q2, self.q3]
     
-
-
-
 class P2P_Path:
     def __init__(self, i, j, start, path, total_dist):
         self.i = i

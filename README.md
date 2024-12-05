@@ -49,6 +49,11 @@
 ## System Diagram
 ![Pathmaster Diagram](Image/1.png)
 
+
+## Installation
+download this file (RRR_Robot) and place this file in the folder to be used.
+
+
 ### RRR Robot
 
 **Design**
